@@ -1,21 +1,17 @@
 """Containing functions to extract all kinds of assertions given a subject."""
-import csv
 import json
 import logging
-from collections import Counter
 from typing import List, Tuple, Dict, Set
 
 from nltk.corpus.reader.wordnet import Synset
 from spacy.language import Language
 from spacy.tokens.doc import Doc
 
-from experiment.rule_based_clustering import rule_based_clustering
 from extraction.assertion import SimplifiedAssertion, Assertion
 from extraction.extract_assertions import extract_general_and_subgroup_assertions, extract_subpart_assertions
 from extraction.extract_terms import extract_subgroups, extract_subparts, Subgroup, Subpart
 from extraction.stuffie import run_extraction
-from filepath_handler import get_article_dir, get_kb_json_path, get_rule_based_clusters_filepath, \
-    get_relevant_scores_path
+from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_scores_path
 from retrieval.doc_filter import get_wikipedia_url
 
 CONCEPT_NAME_KEY = "concept_name"
@@ -55,10 +51,10 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float,
     subgroup_list, subpart_list, general_assertions, subgroup_assertions, subpart_assertions = merge(
         target_subject=concept_name, extractions=extractions, alias=alias)
 
-    # rule-based clustering
-    if do_clustering:
-        logger.info(f"Subject {concept.name()} - Rule-based clustering...")
-        run_rule_based_clustering(concept, general_assertions, subgroup_assertions, subpart_assertions)
+    # # rule-based clustering
+    # if do_clustering:
+    #     logger.info(f"Subject {concept.name()} - Rule-based clustering...")
+    #     run_rule_based_clustering(concept, general_assertions, subgroup_assertions, subpart_assertions)
 
     # statistics
     statistics = {
@@ -224,45 +220,45 @@ def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str]
     return line_list, num_doc_retrieved, num_doc_retained
 
 
-def run_rule_based_clustering(subject: Synset, general_assertions: List[SimplifiedAssertion],
-                              subgroups_assertions: List[SimplifiedAssertion],
-                              subpart_assertions: List[SimplifiedAssertion]) -> None:
-    """Function to run rule based clustering for all kinds of assertion.
-    This is only used to generate training data for BERT-based triple clustering method.
-    Output is automatically written to csv files."""
-
-    all_assertion_lists = [
-        rule_based_clustering(general_assertions),
-        rule_based_clustering(subgroups_assertions),
-        rule_based_clustering(subpart_assertions)
-    ]
-
-    with get_rule_based_clusters_filepath(subject).open('w+') as f:
-        writer = csv.DictWriter(f,
-                                fieldnames=['cluster_id', 'subject_id', 'triple_id', 'subject', 'predicate', 'object',
-                                            'object_root', 'count'])
-        writer.writeheader()
-
-        cluster_id, subject_id, triple_id = 0, 0, 0
-
-        for assertion_list in all_assertion_lists:
-            for _, assertions in assertion_list.items():
-                for same_predicate_asst in assertions:
-                    group = [simple_asst for same_object_asst in same_predicate_asst.same_object_assertion_list
-                             for simple_asst in same_object_asst.simplified_assertion_list]
-                    counter = Counter(group)
-                    for asst, cnt in counter.most_common():
-                        writer.writerow({
-                            'cluster_id': cluster_id,
-                            'subject_id': subject_id,
-                            'triple_id': triple_id,
-                            'subject': str(asst.subj),
-                            'predicate': asst.pred,
-                            'object': str(asst.obj),
-                            'object_root': asst.obj.root.lemma_,
-                            'count': cnt,
-                        })
-                        f.write('\n')
-                        triple_id += 1
-                    cluster_id += 1
-                subject_id += 1
+# def run_rule_based_clustering(subject: Synset, general_assertions: List[SimplifiedAssertion],
+#                               subgroups_assertions: List[SimplifiedAssertion],
+#                               subpart_assertions: List[SimplifiedAssertion]) -> None:
+#     """Function to run rule based clustering for all kinds of assertion.
+#     This is only used to generate training data for BERT-based triple clustering method.
+#     Output is automatically written to csv files."""
+#
+#     all_assertion_lists = [
+#         rule_based_clustering(general_assertions),
+#         rule_based_clustering(subgroups_assertions),
+#         rule_based_clustering(subpart_assertions)
+#     ]
+#
+#     with get_rule_based_clusters_filepath(subject).open('w+') as f:
+#         writer = csv.DictWriter(f,
+#                                 fieldnames=['cluster_id', 'subject_id', 'triple_id', 'subject', 'predicate', 'object',
+#                                             'object_root', 'count'])
+#         writer.writeheader()
+#
+#         cluster_id, subject_id, triple_id = 0, 0, 0
+#
+#         for assertion_list in all_assertion_lists:
+#             for _, assertions in assertion_list.items():
+#                 for same_predicate_asst in assertions:
+#                     group = [simple_asst for same_object_asst in same_predicate_asst.same_object_assertion_list
+#                              for simple_asst in same_object_asst.simplified_assertion_list]
+#                     counter = Counter(group)
+#                     for asst, cnt in counter.most_common():
+#                         writer.writerow({
+#                             'cluster_id': cluster_id,
+#                             'subject_id': subject_id,
+#                             'triple_id': triple_id,
+#                             'subject': str(asst.subj),
+#                             'predicate': asst.pred,
+#                             'object': str(asst.obj),
+#                             'object_root': asst.obj.root.lemma_,
+#                             'count': cnt,
+#                         })
+#                         f.write('\n')
+#                         triple_id += 1
+#                     cluster_id += 1
+#                 subject_id += 1
