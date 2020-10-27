@@ -123,7 +123,7 @@ class TripleClusteringFactory(object):
         with torch.no_grad():
             for i in range(0, len(pairs), self.batch_size):
                 batch = pairs[i:(i + self.batch_size)]
-                input_batch = self.tokenizer.batch_encode_plus(batch, return_tensors="pt", pad_to_max_length=True,
+                input_batch = self.tokenizer.batch_encode_plus(batch, return_tensors="pt", padding="max_length",
                                                                max_length=32)
 
                 if self.device != "cpu":

@@ -39,7 +39,7 @@ class FacetLabelingFactory(object):
                 logger.info('Batch {} / {}'.format(batch_cnt + 1, num_batches))
 
                 batch = sentence_list[i:(i + self.batch_size)]
-                input_batch = self.tokenizer.batch_encode_plus(batch, return_tensors="pt", pad_to_max_length=True,
+                input_batch = self.tokenizer.batch_encode_plus(batch, return_tensors="pt", padding="max_length",
                                                                max_length=32)
 
                 if self.device != "cpu":
