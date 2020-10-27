@@ -6,3 +6,4 @@ transformers
 newspaper3k
 nltk
 inflect
+
