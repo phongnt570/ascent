@@ -128,3 +128,7 @@ update_website.sh
 /src/*.txt
 /src/experiment/
 /src/extraction/moby*.py
+/src/facet_labeling/facet_data_loader.py
+/src/facet_labeling/run_facet_classifier.py
+/src/triple_clustering/run_triple_pair_classifier.py
+/src/triple_clustering/triple_pair_data_loader.py
