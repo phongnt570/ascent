@@ -31,8 +31,7 @@ class FacetDataset(Dataset):
         facet = self.df.loc[index, 'facetValue']
 
         text = " ".join([subj, "[pred]", pred, "[obj]", obj, "[facet]", facet])
-        code = self.tokenizer.encode_plus(text, max_length=self.maxlen, pad_to_max_length=True, return_tensors='pt',
-                                          truncation=True)
+        code = self.tokenizer.encode_plus(text, max_length=self.maxlen, padding="max_length", return_tensors='pt')
 
         result = [code['input_ids'][0], code['token_type_ids'][0], code['attention_mask'][0]]
 
