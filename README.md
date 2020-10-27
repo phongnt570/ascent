@@ -30,6 +30,11 @@ Next, you need to download the following SpaCy model:
 python -m spacy download en_core_web_md
 ```
 
+Then, download the `wordnet` corpus for the `nltk` package:
+```shell script
+python -c 'import nltk; nltk.download("wordnet")'
+```
+
 ### RoBERTa models
 Download our pretrained models for triple clustering and
 facet type labeling from this link: https://www.dropbox.com/s/go8ky3qqshjqo5x/models.zip?dl=0
