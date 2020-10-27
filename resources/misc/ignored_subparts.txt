@@ -1,0 +1,8 @@
+one
+kind
+ability
+specie
+name
+lot
+us
+way

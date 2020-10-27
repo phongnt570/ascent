@@ -1,0 +1,10 @@
+{
+  "DEGREE": 0,
+  "LOCATION": 1,
+  "OTHER": 2,
+  "TEMPORAL": 3,
+  "MANNER": 4,
+  "PURPOSE": 5,
+  "TRANSITIVE-OBJECT": 6,
+  "CAUSE": 7
+}

@@ -1,0 +1,59 @@
+{
+  "RULE1": [
+    {
+      "DEP": "quantmod",
+      "OP": "*"
+    },
+    {
+      "POS": "NUM",
+      "DEP": "nummod"
+    },
+    {
+      "POS": "CCONJ",
+      "DEP": "cc",
+      "OP": "?"
+    },
+    {
+      "POS": "NUM",
+      "DEP": "conj",
+      "OP": "?"
+    },
+    {
+      "DEP": "npadvmod",
+      "POS": "NOUN"
+    },
+    {
+      "POS": {
+        "IN": [
+          "ADJ",
+          "ADV"
+        ]
+      }
+    }
+  ],
+  "RULE2": [
+    {
+      "POS": "NUM",
+      "DEP": "nummod"
+    },
+    {
+      "POS": "NOUN"
+    },
+    {
+      "POS": "NUM",
+      "DEP": "nummod"
+    },
+    {
+      "DEP": "npadvmod",
+      "POS": "NOUN"
+    },
+    {
+      "POS": {
+        "IN": [
+          "ADJ",
+          "ADV"
+        ]
+      }
+    }
+  ]
+}
