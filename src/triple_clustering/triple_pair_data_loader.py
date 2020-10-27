@@ -38,7 +38,7 @@ class TriplePairDataset(Dataset):
         text1 = ' '.join(text1)
         text2 = ' '.join(text2)
         code = self.tokenizer.encode_plus(text1, text2, max_length=self.maxlen, pad_to_max_length=True,
-                                          return_tensors='pt')
+                                          return_tensors='pt', truncation=True)
 
         result = [code['input_ids'][0], code['token_type_ids'][0], code['attention_mask'][0]]
 

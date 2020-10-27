@@ -11,7 +11,7 @@ concepts can be found at https://ascentkb.herokuapp.com/.
 
 ## Prerequisites
 ### Setting up environment
-You need python3.7+ to run the pipeline.
+You need __python3.7+__ to run the pipeline.
 
 First, create and activate a virtual environment using your
 favourite platform, e.g., `python3-venv`:
