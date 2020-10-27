@@ -32,10 +32,7 @@ python -m spacy download en_core_web_md
 
 ### RoBERTa models
 Download our pretrained models for triple clustering and
-facet type labeling:
-```shell script
-TODO
-```
+facet type labeling and extract to the project's root folder.
 
 ### Bing API Key
 Edit the file `config.ini` and provide your __Bing API Key__ and
