@@ -83,7 +83,7 @@ From module: 0
 ```
 
 Final results will be written to
-`ascent/output/kb/<subject>/final.json`.
+`output/kb/<subject>/final.json`.
 
 ## Advance configurations
 An example config file is `config.ini`. The missing fields are Bing
