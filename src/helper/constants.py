@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 from typing import Set, Dict
@@ -9,7 +10,9 @@ from filepath_handler import get_modal_verbs_filepath, get_ignored_pronouns_in_o
     get_special_predicates_filepath, get_numeral_adjectives_filepath, get_special_facet_connectors_filepath, \
     get_special_phrase_patterns_filepath, get_redundant_predicate_prefixes_filepath, \
     get_redundant_predicate_suffixes_filepath, get_ignored_subgroups_filepath, get_ignored_subparts_filepath, \
-    get_has_part_verbs_filepath
+    get_has_part_verbs_filepath, get_wn_wp_map_filepath
+
+EN_WIKIPEDIA_PREFIX = "https://en.wikipedia.org/wiki/"
 
 
 def get_lines(path: Path) -> Set[str]:
@@ -56,3 +59,15 @@ with get_special_phrase_patterns_filepath().open() as f:
 IGNORED_SUBGROUPS = get_lines(get_ignored_subgroups_filepath())
 IGNORED_SUBPARTS = get_lines(get_ignored_subparts_filepath())
 HAS_PART_VERBS = get_lines(get_has_part_verbs_filepath())
+
+MANUAL_WN2WP = {}
+if get_wn_wp_map_filepath().exists():
+    with get_wn_wp_map_filepath().open() as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            MANUAL_WN2WP[row["wordnet"]] = {
+                "wikipedia": row["wikipedia"],
+                "source": row["source"],
+            }
+
+NEED_CRAWL = "<NEED_CRAWL>"

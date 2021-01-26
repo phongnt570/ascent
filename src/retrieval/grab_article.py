@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 from newspaper import Article
 from nltk.corpus.reader.wordnet import Synset
@@ -12,11 +12,11 @@ from filepath_handler import get_article_dir, get_url_path
 logger = logging.getLogger(__name__)
 
 
-def grab_text(subject: Synset, id_url: Tuple[int, str]) -> None:
+def grab_text(subject: Synset, id_url: Tuple[int, str]) -> Union[str, None]:
     """Main function to crawl text."""
 
     doc_id, url = id_url
-    filepath = get_article_dir(subject) / "{}.txt".format(doc_id)
+    filepath = get_article_dir(subject) / f"{doc_id}.txt"
 
     # clean old content
     with filepath.open("w+") as f:
@@ -31,8 +31,11 @@ def grab_text(subject: Synset, id_url: Tuple[int, str]) -> None:
 
         with filepath.open("w+") as f:
             f.write(text)
-    except:  # noqa: E722
-        logger.warning(f"Subject {subject.name()} - Could not crawl {url}")
+
+        return text
+
+    except Exception as e:
+        logger.warning(f"Subject {subject.name()} - Could not crawl {url}. Error: {e.args}")
 
 
 def clean_text(text: str) -> str:

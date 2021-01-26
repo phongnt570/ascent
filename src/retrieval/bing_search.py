@@ -3,11 +3,12 @@
 import http.client
 import json
 import logging
-import urllib.parse
 from typing import List, Tuple, Set
+from urllib.parse import quote_plus
 
 from nltk.corpus.reader.wordnet import Synset
 
+from helper.constants import MANUAL_WN2WP, EN_WIKIPEDIA_PREFIX
 from retrieval.querying import get_search_query, get_wikipedia_search_query
 
 SEARCH_BATCH_SIZE = 50  # maximum number of urls can be retrieved per request to the Bing API
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def search_for_subject(subject: Synset, num_urls: int, subscription_key: str, custom_config: str,
-                       host: str, path: str) -> Tuple[List[Tuple[str, str, str]], str]:
+                       host: str, path: str) -> Tuple[List[Tuple[str, str, str]], str, str]:
     """Perform the search phase for one particular subject."""
 
     query = get_search_query(subject)
@@ -45,7 +46,7 @@ def search_for_subject(subject: Synset, num_urls: int, subscription_key: str, cu
                 if url not in urls:
                     urls.add(url)
                     results.append((url, title, snippet))
-                    if url.startswith("https://en.wikipedia.org/wiki/"):
+                    if url.startswith(EN_WIKIPEDIA_PREFIX):
                         wiki_links.append(url)
                     if len(urls) >= num_urls:
                         break
@@ -57,27 +58,32 @@ def search_for_subject(subject: Synset, num_urls: int, subscription_key: str, cu
         step += 1
         if step >= MAX_SEARCH_STEP:
             break
-
-    if len(wiki_links) == 0:
-        wiki_links = search_wiki(subject, subscription_key, custom_config, host, path)
-    wiki = wiki_links[0]
-    for w in wiki_links:
-        if "List_" in w:
-            continue
-        if "(disambiguation)" in w:
-            continue
-        if "Category:" in w:
-            continue
-        if "Template:" in w:
-            continue
-        wiki = w
-        break
+    if subject.name() in MANUAL_WN2WP:
+        logger.info("Detected manual WordNet-Wikipedia linking")
+        wiki = EN_WIKIPEDIA_PREFIX + quote_plus(MANUAL_WN2WP[subject.name()]["wikipedia"])
+        wiki_map_source = MANUAL_WN2WP[subject.name()]["source"]
+    else:
+        if len(wiki_links) == 0:
+            wiki_links = search_wiki(subject, subscription_key, custom_config, host, path)
+        wiki = wiki_links[0]
+        for w in wiki_links:
+            if "List_" in w:
+                continue
+            if "(disambiguation)" in w:
+                continue
+            if "Category:" in w:
+                continue
+            if "Template:" in w:
+                continue
+            wiki = w
+            break
+        wiki_map_source = "BING"
 
     # Add Wikipedia article
     if wiki not in urls:
         results[-1] = (wiki, "{} - Wikipedia".format(wiki[(wiki.rindex("/") + 1):]), "")
 
-    return results, wiki
+    return results, wiki, wiki_map_source
 
 
 def bing_search(search_query: str, count: int, offset: int, subscription_key: str, custom_config: str, host: str,
@@ -86,7 +92,7 @@ def bing_search(search_query: str, count: int, offset: int, subscription_key: st
 
     headers = {'Ocp-Apim-Subscription-Key': subscription_key}
     conn = http.client.HTTPSConnection(host)
-    query = urllib.parse.quote(search_query)
+    query = quote_plus(search_query)
     conn.request("GET",
                  path + "?q=" + query + "&customconfig="
                  + custom_config + "&mkt=en-US&safesearch=Moderate"

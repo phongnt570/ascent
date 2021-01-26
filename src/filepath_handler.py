@@ -149,6 +149,11 @@ def get_wiki_path(subject):
     return get_wiki_dir() / "{}.txt".format(subject)
 
 
+def get_wiki_map_source_path(subject):
+    subject = get_canonical_name(subject)
+    return get_wiki_dir() / "{}.src.txt".format(subject)
+
+
 def get_article_dir(subject):
     subject = get_canonical_name(subject)
     new_art_dir = get_art_dir() / subject
@@ -315,6 +320,10 @@ def get_ignored_subparts_filepath():
 
 def get_has_part_verbs_filepath():
     return get_misc_dir() / "has_part_verbs.txt"
+
+
+def get_wn_wp_map_filepath():
+    return UniversalFilePathHandler.RES_DIR / "wn_wp_map.csv"
 
 
 def dir_path(path: str):
