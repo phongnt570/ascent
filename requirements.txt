@@ -2,8 +2,7 @@ scikit-learn==0.22.1
 spacy==2.1.0
 torch==1.7.0
 neuralcoref==4.0
-transformers
+transformers==4.1.1
 newspaper3k
 nltk
 inflect
-
