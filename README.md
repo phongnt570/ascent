@@ -59,7 +59,7 @@ Enter subjects: lion.n.01
 ```
 or a list of comma-separated subjects:
 ```
-Enter subjects: lion.n.01,lynx.n.01,elephant.n.01
+Enter subjects: lion.n.01,lynx.n.02,elephant.n.01
 ```
 or path to a file containing one subject per line:
 ```
@@ -85,7 +85,7 @@ From module: 0
 Final results will be written to
 `output/kb/<subject>/final.json`.
 
-## Advance configurations
+## Advanced configurations
 An example config file is `config.ini`. The missing fields are Bing
 API-related.
 
