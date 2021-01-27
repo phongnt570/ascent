@@ -135,7 +135,7 @@ def subgroup_clustering(subgroup_chunk_list: List[List[Token]], tokens_of_subjec
     clustering_factory.fit(distance_matrix)
     labels = clustering_factory.labels_
 
-    np_subgroup_array = np.array(subgroup_chunk_list)
+    np_subgroup_array = np.array(subgroup_chunk_list, dtype="object")
     subgroup_list = []
     for c in range(np.max(labels) + 1):
         cluster = list(np_subgroup_array[labels == c])
