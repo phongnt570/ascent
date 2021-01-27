@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Tuple
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
-from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, SUBPART_ASSERTION_KEY, SUBGROUP_KEY, \
+from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, SUBGROUP_KEY, \
     STATISTICS_KEY
 from facet_grouping.facet_clustering import facet_clustering, FacetCluster
 from filepath_handler import get_final_kb_json_path, get_facet_labeled_json_path
@@ -158,14 +158,14 @@ def group_for_one_subject(subject: Synset):
     data[SUBGROUP_KEY] = [sg for i, sg in enumerate(data[SUBGROUP_KEY]) if i not in ids_to_be_removed]
     data[STATISTICS_KEY]["num_subgroups"] = len(data[SUBGROUP_KEY])
 
-    for subject_data in (data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[SUBPART_ASSERTION_KEY]):
+    for subject_data in (data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[ASPECT_ASSERTION_KEY]):
         group_subject_data(subject_data)
 
     # remove empty subgroup/subpart
     data[SUBGROUP_ASSERTION_KEY] = sorted([s for s in data[SUBGROUP_ASSERTION_KEY] if len(s["clusters"]) > 0],
                                           key=lambda x: -len(x["clusters"]))
-    data[SUBPART_ASSERTION_KEY] = sorted([s for s in data[SUBPART_ASSERTION_KEY] if len(s["clusters"]) > 0],
-                                         key=lambda x: -len(x["clusters"]))
+    data[ASPECT_ASSERTION_KEY] = sorted([s for s in data[ASPECT_ASSERTION_KEY] if len(s["clusters"]) > 0],
+                                        key=lambda x: -len(x["clusters"]))
 
     with get_final_kb_json_path(subject).open("w+", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)

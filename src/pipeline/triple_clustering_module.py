@@ -10,7 +10,7 @@ from typing import List, Dict, Tuple
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
-from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, SUBPART_ASSERTION_KEY, STATISTICS_KEY
+from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, STATISTICS_KEY
 from filepath_handler import get_kb_json_path, get_triple_clusters_json_path
 from helper.argument_parser import split_subjects_to_gpus
 from pipeline.module_interface import Module
@@ -92,19 +92,19 @@ def run_triple_clustering_for_subject(subject: Synset, factory: TripleClustering
     sub_group_clusters = bert_based_triple_clustering(sub_group_assertion_list, factory)
 
     logger.info(f'Subject {subject.name()} - Clustering subpart triples')
-    sub_part_assertion_list = get_assertion_list(data, key=SUBPART_ASSERTION_KEY)
+    sub_part_assertion_list = get_assertion_list(data, key=ASPECT_ASSERTION_KEY)
     sub_part_clusters = bert_based_triple_clustering(sub_part_assertion_list, factory)
 
     # update json data
     data[GENERAL_ASSERTION_KEY] = build_dict_from_cluster_list(general_clusters)
     data[SUBGROUP_ASSERTION_KEY] = build_dict_from_cluster_list(sub_group_clusters)
-    data[SUBPART_ASSERTION_KEY] = build_dict_from_cluster_list(sub_part_clusters)
+    data[ASPECT_ASSERTION_KEY] = build_dict_from_cluster_list(sub_part_clusters)
 
     # update statistics
     data[STATISTICS_KEY].update({
         "num_general_canonical_assertions": sum([len(name["clusters"]) for name in data[GENERAL_ASSERTION_KEY]]),
         "num_subgroup_canonical_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
-        "num_subpart_canonical_assertions": sum([len(name["clusters"]) for name in data[SUBPART_ASSERTION_KEY]]),
+        "num_subpart_canonical_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
     })
 
     return data

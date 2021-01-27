@@ -5,7 +5,7 @@ from functools import partial
 from multiprocessing import Pool
 from typing import Tuple, List
 
-from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, SUBPART_ASSERTION_KEY, SYNSET_KEY
+from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, WN_SYNSET_KEY
 from facet_labeling.facet_labeling_factory import FacetLabelingFactory
 from filepath_handler import get_facet_labeled_json_path, get_triple_clusters_json_path
 from helper.argument_parser import split_subjects_to_gpus
@@ -59,7 +59,7 @@ class FacetLabelingModule(Module):
                     data = json.load(f)
                     data_list.append(data)
                     for subject_data in (
-                            data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[SUBPART_ASSERTION_KEY]):
+                            data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[ASPECT_ASSERTION_KEY]):
                         assertion_list.extend(
                             [assertion for cluster in subject_data["clusters"] for assertion in cluster])
             except Exception as err:
@@ -69,7 +69,7 @@ class FacetLabelingModule(Module):
 
         logger.info('Updating and saving new JSON files...')
         for data in data_list:
-            subject: str = data[SYNSET_KEY]
+            subject: str = data[WN_SYNSET_KEY]
             with get_facet_labeled_json_path(subject).open("w+", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
 

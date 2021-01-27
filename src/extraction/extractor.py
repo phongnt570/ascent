@@ -14,15 +14,15 @@ from extraction.stuffie import run_extraction
 from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_scores_path
 from retrieval.doc_filter import get_wikipedia_url
 
-CONCEPT_NAME_KEY = "concept_name"
-SYNSET_KEY = "synset"
+FIRST_LEMMA_KEY = "first_lemma"
+WN_SYNSET_KEY = "wn_synset"
 WIKIPEDIA_KEY = "wikipedia"
-ALIAS_KEY = "alias"
+LEMMAS_KEY = "lemmas"
 SUBGROUP_KEY = "subgroups"
-SUBPART_KEY = "subparts"
+ASPECT_KEY = "aspects"
 GENERAL_ASSERTION_KEY = "general_assertions"
 SUBGROUP_ASSERTION_KEY = "subgroup_assertions"
-SUBPART_ASSERTION_KEY = "subpart_assertions"
+ASPECT_ASSERTION_KEY = "aspect_assertions"
 STATISTICS_KEY = "statistics"
 
 logger = logging.getLogger(__name__)
@@ -73,18 +73,18 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float,
     # print results to json file
     logger.info(f"Subject {concept.name()} - Printing results to JSON file...")
     json_obj = {
-        CONCEPT_NAME_KEY: concept_name,
-        SYNSET_KEY: concept.name(),
+        FIRST_LEMMA_KEY: concept_name,
+        WN_SYNSET_KEY: concept.name(),
         WIKIPEDIA_KEY: get_wikipedia_url(concept),
-        ALIAS_KEY: alias,
+        LEMMAS_KEY: alias,
         SUBGROUP_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
-        SUBPART_KEY: [subpart.to_dict() for subpart in subpart_list],
+        ASPECT_KEY: [subpart.to_dict() for subpart in subpart_list],
         GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
                                 general_assertions],
         SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
                                  subgroup_assertions],
-        SUBPART_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
-                                subpart_assertions],
+        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
+                               subpart_assertions],
         STATISTICS_KEY: statistics,
     }
     if output_file is None:
