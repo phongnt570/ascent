@@ -116,7 +116,7 @@ def build_dict_from_cluster_list(subject2clusters: Dict[str, List[List[SimpleAss
     data = []
     for subject, clusters in sorted(subject2clusters.items(), key=lambda sc: -len(sc[1])):
         data.append({
-            "name": subject,
+            "subject": subject,
             "clusters": [
                 [assertion.to_dict() for assertion in cluster]
                 for cluster in clusters
