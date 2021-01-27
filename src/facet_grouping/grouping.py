@@ -158,6 +158,7 @@ def group_for_one_subject(subject: Synset):
     data[SUBGROUP_KEY] = [sg for i, sg in enumerate(data[SUBGROUP_KEY]) if i not in ids_to_be_removed]
     data[STATISTICS_KEY]["num_subgroups"] = len(data[SUBGROUP_KEY])
 
+    # find representative for each assertion cluster
     for subject_data in (data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[ASPECT_ASSERTION_KEY]):
         group_subject_data(subject_data)
 
@@ -166,6 +167,21 @@ def group_for_one_subject(subject: Synset):
                                           key=lambda x: -len(x["clusters"]))
     data[ASPECT_ASSERTION_KEY] = sorted([s for s in data[ASPECT_ASSERTION_KEY] if len(s["clusters"]) > 0],
                                         key=lambda x: -len(x["clusters"]))
+
+    # update statistics
+    data[STATISTICS_KEY].update({
+        "num_subgroups": len(data[SUBGROUP_ASSERTION_KEY]),
+        "num_aspects": len(data[ASPECT_ASSERTION_KEY]),
+        "num_canonical_facets": sum([len(a["facets"])
+                                     for subject_data in (
+                                             data[GENERAL_ASSERTION_KEY] +
+                                             data[SUBGROUP_ASSERTION_KEY] +
+                                             data[ASPECT_ASSERTION_KEY]
+                                     ) for a in subject_data["clusters"]]),
+        "num_canonical_general_assertions": sum([len(name["clusters"]) for name in data[GENERAL_ASSERTION_KEY]]),
+        "num_canonical_subgroup_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
+        "num_canonical_aspect_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
+    }),
 
     with get_final_kb_json_path(subject).open("w+", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
