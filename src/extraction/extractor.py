@@ -11,8 +11,9 @@ from extraction.assertion import SimplifiedAssertion, Assertion
 from extraction.extract_assertions import extract_general_and_subgroup_assertions, extract_subpart_assertions
 from extraction.extract_terms import extract_subgroups, extract_subparts, Subgroup, Subpart
 from extraction.stuffie import run_extraction
-from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_scores_path
-from retrieval.doc_filter import get_wikipedia_url
+from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_scores_path, get_url_path, \
+    get_title_path, get_snippet_path
+from retrieval.doc_filter import get_wikipedia_url, get_wikipedia_source
 
 FIRST_LEMMA_KEY = "first_lemma"
 WN_SYNSET_KEY = "wn_synset"
@@ -24,12 +25,13 @@ GENERAL_ASSERTION_KEY = "general_assertions"
 SUBGROUP_ASSERTION_KEY = "subgroup_assertions"
 ASPECT_ASSERTION_KEY = "aspect_assertions"
 STATISTICS_KEY = "statistics"
+BING_SEARCH_KEY = "bing_search"
 
 logger = logging.getLogger(__name__)
 
 
-def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float,
-               do_clustering: bool = False, alias: List[str] = None, output_file: str = None):
+def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias: List[str] = None,
+               output_file: str = None):
     # get all relevant texts
     line_list, num_doc_retrieved, num_doc_retained = get_relevant_texts(concept, doc_threshold)
 
@@ -51,48 +53,62 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float,
     subgroup_list, subpart_list, general_assertions, subgroup_assertions, subpart_assertions = merge(
         target_subject=concept_name, extractions=extractions, alias=alias)
 
-    # # rule-based clustering
-    # if do_clustering:
-    #     logger.info(f"Subject {concept.name()} - Rule-based clustering...")
-    #     run_rule_based_clustering(concept, general_assertions, subgroup_assertions, subpart_assertions)
-
-    # statistics
-    statistics = {
-        "num_doc_retrieved": num_doc_retrieved,
-        "num_doc_retained": num_doc_retained,
-        "num_sentences": num_sentences,
-        "num_extracted_assertions": len(assertion_list),
-        "num_general_assertions": len(general_assertions),
-        "num_subgroup_assertions": len(subgroup_assertions),
-        "num_subpart_assertions": len(subpart_assertions),
-        "num_subgroups": len(subgroup_list),
-        "num_subparts": len(subpart_list),
-        "num_facets": sum([len(a.facets) for a in (general_assertions + subgroup_assertions + subpart_assertions)]),
-    }
+    # get urls, titles, snippets (to appear in json files)
+    with get_url_path(concept).open() as f:
+        urls = [line.strip() for line in f.readlines()]
+    with get_title_path(concept).open() as f:
+        titles = [line.strip() for line in f.readlines()]
+    with get_snippet_path(concept).open() as f:
+        snippets = [line.strip() for line in f.readlines()]
 
     # print results to json file
     logger.info(f"Subject {concept.name()} - Printing results to JSON file...")
     json_obj = {
         FIRST_LEMMA_KEY: concept_name,
-        WN_SYNSET_KEY: concept.name(),
-        WIKIPEDIA_KEY: get_wikipedia_url(concept),
+        WN_SYNSET_KEY: {
+            "synsetID": concept.name(),
+            "offsetID": get_wn_id(concept),
+        },
+        WIKIPEDIA_KEY: {
+            "url": get_wikipedia_url(concept),
+            "source": get_wikipedia_source(concept),
+        },
         LEMMAS_KEY: alias,
         SUBGROUP_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
         ASPECT_KEY: [subpart.to_dict() for subpart in subpart_list],
-        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
-                                general_assertions],
-        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
-                                 subgroup_assertions],
-        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=not do_clustering) for assertion in
-                               subpart_assertions],
-        STATISTICS_KEY: statistics,
+        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in general_assertions],
+        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subgroup_assertions],
+        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subpart_assertions],
+        STATISTICS_KEY: {
+            "num_doc_retrieved": num_doc_retrieved,
+            "num_doc_retained": num_doc_retained,
+            "num_sentences": num_sentences,
+            "num_extracted_assertions": len(assertion_list),
+            "num_general_assertions": len(general_assertions),
+            "num_subgroup_assertions": len(subgroup_assertions),
+            "num_aspect_assertions": len(subpart_assertions),
+            "num_subgroups": len(subgroup_list),
+            "num_aspects": len(subpart_list),
+            "num_facets": sum([len(a.facets) for a in (general_assertions + subgroup_assertions + subpart_assertions)]),
+        },
+        BING_SEARCH_KEY: [
+            {
+                "url": url,
+                "title": title if title else None,
+                "snippet": snippet if snippet else None
+            } for url, title, snippet in zip(urls, titles, snippets)
+        ]
     }
     if output_file is None:
         with get_kb_json_path(concept).open("w+", encoding="utf-8") as f:
             json.dump(json_obj, f, ensure_ascii=False, indent=2, sort_keys=False)
     else:
-        with open(output_file, "w+") as f:
+        with open(output_file, "w+", encoding="utf-8") as f:
             json.dump(json_obj, f, ensure_ascii=False, indent=2, sort_keys=False)
+
+
+def get_wn_id(synset: Synset) -> str:
+    return f"wn:{str(synset.offset()).zfill(8)}n"
 
 
 def get_concept_name(concept: Synset) -> str:
@@ -218,47 +234,3 @@ def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str]
             continue
 
     return line_list, num_doc_retrieved, num_doc_retained
-
-
-# def run_rule_based_clustering(subject: Synset, general_assertions: List[SimplifiedAssertion],
-#                               subgroups_assertions: List[SimplifiedAssertion],
-#                               subpart_assertions: List[SimplifiedAssertion]) -> None:
-#     """Function to run rule based clustering for all kinds of assertion.
-#     This is only used to generate training data for BERT-based triple clustering method.
-#     Output is automatically written to csv files."""
-#
-#     all_assertion_lists = [
-#         rule_based_clustering(general_assertions),
-#         rule_based_clustering(subgroups_assertions),
-#         rule_based_clustering(subpart_assertions)
-#     ]
-#
-#     with get_rule_based_clusters_filepath(subject).open('w+') as f:
-#         writer = csv.DictWriter(f,
-#                                 fieldnames=['cluster_id', 'subject_id', 'triple_id', 'subject', 'predicate', 'object',
-#                                             'object_root', 'count'])
-#         writer.writeheader()
-#
-#         cluster_id, subject_id, triple_id = 0, 0, 0
-#
-#         for assertion_list in all_assertion_lists:
-#             for _, assertions in assertion_list.items():
-#                 for same_predicate_asst in assertions:
-#                     group = [simple_asst for same_object_asst in same_predicate_asst.same_object_assertion_list
-#                              for simple_asst in same_object_asst.simplified_assertion_list]
-#                     counter = Counter(group)
-#                     for asst, cnt in counter.most_common():
-#                         writer.writerow({
-#                             'cluster_id': cluster_id,
-#                             'subject_id': subject_id,
-#                             'triple_id': triple_id,
-#                             'subject': str(asst.subj),
-#                             'predicate': asst.pred,
-#                             'object': str(asst.obj),
-#                             'object_root': asst.obj.root.lemma_,
-#                             'count': cnt,
-#                         })
-#                         f.write('\n')
-#                         triple_id += 1
-#                     cluster_id += 1
-#                 subject_id += 1

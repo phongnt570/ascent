@@ -6,7 +6,7 @@ from nltk.corpus.reader.wordnet import Synset
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from filepath_handler import get_article_dir, get_wiki_path
+from filepath_handler import get_article_dir, get_wiki_path, get_wiki_map_source_path
 from helper.constants import NEED_CRAWL
 from retrieval.grab_article import get_urls, grab_text
 
@@ -80,6 +80,13 @@ def get_article(subject: Synset, doc_id: int, url: str) -> str:
 def get_wikipedia_url(subject: Synset) -> str:
     with get_wiki_path(subject).open() as f:
         return f.readline().strip()
+
+
+def get_wikipedia_source(subject: Synset) -> str:
+    if get_wiki_map_source_path(subject).exists():
+        with get_wiki_map_source_path(subject).open() as f:
+            return f.readline().strip()
+    return "BING"
 
 
 def get_wikipedia_article(subject: Synset) -> str:

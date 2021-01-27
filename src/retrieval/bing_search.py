@@ -114,12 +114,12 @@ def parse_content_from_search_result(search_result_json: str) -> List[Tuple[str,
     web_pages = json_obj["webPages"]
     values = web_pages["value"]
 
-    urls = []
+    results = []
     for web in values:
         if web["language"] == "en":
-            urls.append((web["url"], web["name"], web["snippet"]))
+            results.append((web["url"], web["name"], web["snippet"]))
 
-    return urls
+    return results
 
 
 def search_wiki(subject: Synset, subscription_key: str, custom_config: str, host: str, path: str) \

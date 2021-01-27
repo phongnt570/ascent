@@ -57,11 +57,11 @@ class BingSearchModule(Module):
                         f"Change of WordNet-Wikipedia mapping: current Wikipedia - {old_wiki} "
                         f"will be replaced by {wiki}")
                     with get_url_path(subject).open() as f:
-                        urls = [line.strip() for line in f.readlines() if line.strip()]
+                        urls = [line.strip() for line in f.readlines()]
                     with get_title_path(subject).open() as f:
-                        titles = [line.strip() for line in f.readlines() if line.strip()]
+                        titles = [line.strip() for line in f.readlines()]
                     with get_snippet_path(subject).open() as f:
-                        snippets = [line.strip() for line in f.readlines() if line.strip()]
+                        snippets = [line.strip() for line in f.readlines()]
 
                     if wiki not in set(url.lower() for url in urls):
                         logger.info("New Wikipedia URL not in search results, append it.")

@@ -102,9 +102,9 @@ def run_triple_clustering_for_subject(subject: Synset, factory: TripleClustering
 
     # update statistics
     data[STATISTICS_KEY].update({
-        "num_general_canonical_assertions": sum([len(name["clusters"]) for name in data[GENERAL_ASSERTION_KEY]]),
-        "num_subgroup_canonical_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
-        "num_subpart_canonical_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
+        "num_canonical_general_assertions": sum([len(name["clusters"]) for name in data[GENERAL_ASSERTION_KEY]]),
+        "num_canonical_subgroup_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
+        "num_canonical_aspect_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
     })
 
     return data

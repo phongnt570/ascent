@@ -29,8 +29,7 @@ class ExtractionModule(Module):
         with Pool(len(batch_list)) as pool:
             pool.map(processes, batch_list)
 
-    def single_process(self, subject_list: List[str], doc_threshold: float = 0.55,
-                       do_clustering: bool = False) -> None:
+    def single_process(self, subject_list: List[str], doc_threshold: float = 0.55) -> None:
         # get spacy
         spacy_nlp = StaticResource.nlp()
         neuralcoref.add_to_pipe(spacy_nlp)
@@ -48,7 +47,6 @@ class ExtractionModule(Module):
                 single_run(concept=concept,
                            spacy_nlp=spacy_nlp,
                            doc_threshold=doc_threshold,
-                           do_clustering=do_clustering,
                            alias=get_concept_alias(concept))
                 logger.info(f"Subject {concept.name()} - Extraction done")
             except Exception as err:
