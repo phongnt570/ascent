@@ -4,7 +4,7 @@ import http.client
 import json
 import logging
 from typing import List, Tuple, Set
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, unquote_plus
 
 from nltk.corpus.reader.wordnet import Synset
 
@@ -60,13 +60,14 @@ def search_for_subject(subject: Synset, num_urls: int, subscription_key: str, cu
             break
     if subject.name() in MANUAL_WN2WP:
         logger.info("Detected manual WordNet-Wikipedia linking")
-        wiki = EN_WIKIPEDIA_PREFIX + quote_plus(MANUAL_WN2WP[subject.name()]["wikipedia"])
+        wiki = EN_WIKIPEDIA_PREFIX + quote_plus(MANUAL_WN2WP[subject.name()]["wikipedia"]).capitalize()
         wiki_map_source = MANUAL_WN2WP[subject.name()]["source"]
     else:
         if len(wiki_links) == 0:
             wiki_links = search_wiki(subject, subscription_key, custom_config, host, path)
         wiki = wiki_links[0]
         for w in wiki_links:
+            w = unquote_plus(w)
             if "List_" in w:
                 continue
             if "(disambiguation)" in w:
@@ -80,8 +81,8 @@ def search_for_subject(subject: Synset, num_urls: int, subscription_key: str, cu
         wiki_map_source = "BING"
 
     # Add Wikipedia article
-    if wiki not in urls:
-        results[-1] = (wiki, "{} - Wikipedia".format(wiki[(wiki.rindex("/") + 1):]), "")
+    if wiki.lower() not in set(url.lower() for url in urls):
+        results[-1] = (wiki, "{} - Wikipedia".format(wiki[(wiki.rindex("/") + 1):]).capitalize(), "")
 
     return results, wiki, wiki_map_source
 

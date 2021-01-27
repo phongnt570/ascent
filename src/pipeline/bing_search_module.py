@@ -63,7 +63,7 @@ class BingSearchModule(Module):
                     with get_snippet_path(subject).open() as f:
                         snippets = [line.strip() for line in f.readlines()]
 
-                    if wiki not in set(url.lower() for url in urls):
+                    if wiki.lower() not in set(url.lower() for url in urls):
                         logger.info("New Wikipedia URL not in search results, append it.")
                         urls[-1] = wiki
                         titles[-1] = "{} - Wikipedia".format(wiki[(wiki.rindex("/") + 1):].replace("_", " "))

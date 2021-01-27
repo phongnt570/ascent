@@ -69,7 +69,7 @@ class FacetLabelingModule(Module):
 
         logger.info('Updating and saving new JSON files...')
         for data in data_list:
-            subject: str = data[WN_SYNSET_KEY]["synsetID"]
+            subject: str = data[WN_SYNSET_KEY]["synset_id"]
             with get_facet_labeled_json_path(subject).open("w+", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
 

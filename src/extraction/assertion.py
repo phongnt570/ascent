@@ -70,13 +70,19 @@ class Assertion(object):
 
         self.subpart_revised: bool = False
 
+        self.doc_id = None
+        if isinstance(self.obj, Span) or isinstance(self.obj, Token):
+            self.doc_id = self.obj.doc.user_data["doc_id"]
+        elif isinstance(self.full_obj, Span) or isinstance(self.full_obj, Token):
+            self.doc_id = self.full_obj.doc.user_data["doc_id"]
+
     def __str__(self):
         return self.to_json_dict()
 
     def to_json_dict(self) -> str:
         return json.dumps(self.to_dict(), indent=2)
 
-    def to_dict(self, simplify: bool = False) -> Dict[str, Any]:
+    def to_dict(self, simplify: bool = False, urls: List[str] = None) -> Dict[str, Any]:
         if not simplify:
             return {
                 "subject": str(self.full_subj) if self.full_subj is not None else None,
@@ -86,10 +92,14 @@ class Assertion(object):
                 "facets": [
                     facet.to_dict() for facet in self.facets
                 ],
-                "source": self.obj.sent if isinstance(self.obj, Span) else None
+                "source": {
+                    "doc_id": self.doc_id,
+                    "url": urls[self.doc_id] if urls is not None and self.doc_id is not None else None
+                }
+                # "source": self.obj.sent if isinstance(self.obj, Span) else None
             }
         else:
-            p = SimplifiedAssertion(self).to_dict(simplifies_object=True)
+            p = SimplifiedAssertion(self).to_dict(simplifies_object=True, urls=urls)
             p.update({
                 "subject": str(self.full_subj)
             })
@@ -165,8 +175,11 @@ class SimplifiedAssertion(object):
         self.subj = normalize_subject_noun_chunk(assertion.full_subj)
         self.pred = simplify_predicate(assertion.full_pred)
         self.obj = assertion.full_obj
+        # filter facets by length
         self.facets = [f for f in assertion.facets if
                        f.full_statement is None or len(f.full_statement) <= MAX_FACET_LENGTH]
+
+        self.doc_id = self.original_assertion.doc_id
 
     def __hash__(self):
         return hash(self.get_triple_str().lower())
@@ -177,7 +190,7 @@ class SimplifiedAssertion(object):
     def get_triple_str(self):
         return str(self.subj) + " " + self.pred + " " + str(self.obj)
 
-    def to_dict(self, simplifies_object: bool = False) -> dict:
+    def to_dict(self, simplifies_object: bool = False, urls: List[str] = None) -> dict:
         return {
             'subject': str(self.subj),
             'predicate': str(self.pred),
@@ -186,8 +199,57 @@ class SimplifiedAssertion(object):
             'facets': [
                 facet.to_dict() for facet in self.facets
             ],
-            "source": str(self.obj.sent) if isinstance(self.obj, Span) else None
+            "source": {
+                "doc_id": self.doc_id,
+                "url": urls[self.doc_id] if urls else None,
+                "in_sentence": get_sentence_source(
+                    self.original_assertion.full_subj if self.original_assertion is not None else None, self.obj),
+            }
+            # "source": str(self.obj.sent) if isinstance(self.obj, Span) else None
         }
+
+
+def get_sentence_source(subj, obj):
+    sentence = None
+    tokens = None
+
+    obj_start = None
+    obj_end = None
+    obj_start_char = None
+    obj_end_char = None
+
+    subj_start = None
+    subj_end = None
+    subj_start_char = None
+    subj_end_char = None
+
+    if isinstance(obj, Span):
+        sentence = str(obj.sent)
+        tokens = [str(token) for token in obj.sent]
+
+        obj_start = obj.start - obj.sent.start
+        obj_end = obj.end - obj.sent.start
+        obj_start_char = obj.start_char - obj.sent.start_char
+        obj_end_char = obj.end_char - obj.sent.start_char
+
+        if isinstance(subj, Span):
+            subj_start = subj.start - obj.sent.start
+            subj_end = subj.end - obj.sent.start
+            subj_start_char = subj.start_char - obj.sent.start_char
+            subj_end_char = subj.end_char - obj.sent.start_char
+
+    return {
+        "sentence": sentence,
+        "tokens": tokens,
+        "obj_start": obj_start,
+        "obj_end": obj_end,
+        "obj_start_char": obj_start_char,
+        "obj_end_char": obj_end_char,
+        "subj_start": subj_start,
+        "subj_end": subj_end,
+        "subj_start_char": subj_start_char,
+        "subj_end_char": subj_end_char,
+    }
 
 
 class SimplifiedSubpartAssertion(SimplifiedAssertion):
@@ -201,6 +263,9 @@ class SimplifiedSubpartAssertion(SimplifiedAssertion):
         self.obj = obj
         self.facets = [facet for facet in facets if
                        facet.full_statement is None or len(facet.full_statement) <= MAX_FACET_LENGTH]
+
+        self.doc_id = self.obj.doc.user_data["doc_id"]
+        self.original_assertion = None
 
 
 class SameObjectAssertion(object):

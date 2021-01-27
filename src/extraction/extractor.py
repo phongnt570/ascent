@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias: List[str] = None,
                output_file: str = None):
     # get all relevant texts
-    line_list, num_doc_retrieved, num_doc_retained = get_relevant_texts(concept, doc_threshold)
+    line_list, line_doc_id_list, num_doc_retrieved, num_doc_retained = get_relevant_texts(concept, doc_threshold)
 
     # OpenIE
     logger.info(f"Subject {concept.name()} - Running SpaCy, NeuralCoref and StuffIE...")
@@ -42,7 +42,7 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         alias = []
     subject_list = [concept_name]
     subject_list.extend(alias)
-    doc_list, assertion_list, num_sentences = run_extraction(line_list, spacy_nlp, concept_name)
+    doc_list, assertion_list, num_sentences = run_extraction(line_list, line_doc_id_list, spacy_nlp, concept_name)
 
     extractions = []
     for subject in subject_list:
@@ -62,12 +62,14 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         snippets = [line.strip() for line in f.readlines()]
 
     # print results to json file
-    logger.info(f"Subject {concept.name()} - Printing results to JSON file...")
+    logger.info(
+        f"Subject {concept.name()} - Printing results to JSON file: "
+        f"{output_file if output_file else get_kb_json_path(concept)}...")
     json_obj = {
         FIRST_LEMMA_KEY: concept_name,
         WN_SYNSET_KEY: {
-            "synsetID": concept.name(),
-            "offsetID": get_wn_id(concept),
+            "synset_id": concept.name(),
+            "offset_id": get_wn_id(concept),
         },
         WIKIPEDIA_KEY: {
             "url": get_wikipedia_url(concept),
@@ -76,9 +78,9 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         LEMMAS_KEY: alias,
         SUBGROUPS_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
         ASPECTS_KEY: [subpart.to_dict() for subpart in subpart_list],
-        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in general_assertions],
-        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subgroup_assertions],
-        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subpart_assertions],
+        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in general_assertions],
+        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in subgroup_assertions],
+        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in subpart_assertions],
         STATISTICS_KEY: {
             "num_doc_retrieved": num_doc_retrieved,
             "num_doc_retained": num_doc_retained,
@@ -201,7 +203,7 @@ def merge_subparts(subpart_list: List[Subpart]) -> List[Subpart]:
     return list(name2subpart.values())
 
 
-def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str], int, int]:
+def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str], List[int], int, int]:
     """Get all lines from all relevant articles. Also return the number of retrieved documents and retained ones."""
 
     article_dir = get_article_dir(subject)
@@ -214,6 +216,7 @@ def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str]
 
     num_doc_retrieved = len(scores)
     line_list = []
+    doc_id_list = []
     num_doc_retained = 0
     for doc_id, score in enumerate(scores):
         path = article_dir / "{}.txt".format(doc_id)
@@ -228,9 +231,10 @@ def get_relevant_texts(subject: Synset, doc_threshold: float) -> Tuple[List[str]
 
                 if score >= doc_threshold or (len(text.split()) <= 200 and subject_name in text.lower()):
                     line_list.extend(lines)
+                    doc_id_list.extend([doc_id] * len(lines))
                     num_doc_retained += 1
         except FileNotFoundError:
             logger.warning(f"Subject {subject.name()} - {path} does not exist!")
             continue
 
-    return line_list, num_doc_retrieved, num_doc_retained
+    return line_list, doc_id_list, num_doc_retrieved, num_doc_retained

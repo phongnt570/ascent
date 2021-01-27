@@ -33,7 +33,7 @@ def get_plural_form_of_noun_phrase(noun_phrase: str) -> str:
     return " ".join(words)
 
 
-def run_extraction(lines: List[str], spacy_nlp: Language, subject: str) -> Tuple[List[Doc], List[Assertion], int]:
+def run_extraction(lines: List[str], doc_ids: List[int], spacy_nlp: Language, subject: str) -> Tuple[List[Doc], List[Assertion], int]:
     """This function is called by the extractor pipeline and
     returns also list of processed documents and number of sentences (for statistic purpose)"""
 
@@ -43,11 +43,12 @@ def run_extraction(lines: List[str], spacy_nlp: Language, subject: str) -> Tuple
 
     subject_less_idx: Set[int] = set()
 
-    for line in lines:
+    for line, doc_id in zip(lines, doc_ids):
         if len(line.split()) > 1000:  # ignore huge paragraphs
             continue
 
         doc: Doc = spacy_nlp(line.strip())
+        doc.user_data["doc_id"] = doc_id
         doc_list.append(doc)
 
         extracted = 0
