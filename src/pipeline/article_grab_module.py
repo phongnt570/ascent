@@ -54,4 +54,4 @@ class ArticleGrabModule(Module):
         with Pool(self._config["article_grab"].getint("processes_per_crawler")) as p:
             p.map(grab, enumerate(urls))
 
-        logger.info(f"Subject {subject.name()} - Took {time() - ts} seconds.")
+        logger.info(f"Subject {subject.name()} - Module crawler took {time() - ts} seconds.")
