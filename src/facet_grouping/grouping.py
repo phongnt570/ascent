@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Tuple
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
-from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, SUBGROUP_KEY, \
+from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, SUBGROUPS_KEY, \
     STATISTICS_KEY
 from facet_grouping.facet_clustering import facet_clustering, FacetCluster
 from filepath_handler import get_final_kb_json_path, get_facet_labeled_json_path
@@ -133,7 +133,7 @@ def group_for_one_subject(subject: Synset):
     # remove incorrect subgroups
     to_be_removed = set()
     existed = set()
-    for subgroup in data[SUBGROUP_KEY]:
+    for subgroup in data[SUBGROUPS_KEY]:
         name = subgroup["name"]
         s_ss = wn.synsets(name.replace(" ", "_"), "n")
         if len(s_ss) == 1:
@@ -143,20 +143,20 @@ def group_for_one_subject(subject: Synset):
             else:
                 subgroup["ssid"] = s_ss.name()
                 existed.add(s_ss.name())
-    data[SUBGROUP_KEY] = [sg for sg in data[SUBGROUP_KEY] if sg["name"] not in to_be_removed]
-    data[SUBGROUP_ASSERTION_KEY] = [a for a in data[SUBGROUP_ASSERTION_KEY] if a["name"] not in to_be_removed]
+    data[SUBGROUPS_KEY] = [sg for sg in data[SUBGROUPS_KEY] if sg["name"] not in to_be_removed]
+    data[SUBGROUP_ASSERTION_KEY] = [a for a in data[SUBGROUP_ASSERTION_KEY] if a["subject"] not in to_be_removed]
 
     # remove duplicated subgroups
     ids_to_be_removed = set()
     names_existed = set()
-    for i, subgroup in enumerate(data[SUBGROUP_KEY]):
+    for i, subgroup in enumerate(data[SUBGROUPS_KEY]):
         name = subgroup["name"]
         if name in names_existed:
             ids_to_be_removed.add(i)
         else:
             names_existed.add(name)
-    data[SUBGROUP_KEY] = [sg for i, sg in enumerate(data[SUBGROUP_KEY]) if i not in ids_to_be_removed]
-    data[STATISTICS_KEY]["num_subgroups"] = len(data[SUBGROUP_KEY])
+    data[SUBGROUPS_KEY] = [sg for i, sg in enumerate(data[SUBGROUPS_KEY]) if i not in ids_to_be_removed]
+    data[STATISTICS_KEY]["num_subgroups"] = len(data[SUBGROUPS_KEY])
 
     # find representative for each assertion cluster
     for subject_data in (data[GENERAL_ASSERTION_KEY] + data[SUBGROUP_ASSERTION_KEY] + data[ASPECT_ASSERTION_KEY]):

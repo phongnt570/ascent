@@ -19,8 +19,8 @@ FIRST_LEMMA_KEY = "first_lemma"
 WN_SYNSET_KEY = "wn_synset"
 WIKIPEDIA_KEY = "wikipedia"
 LEMMAS_KEY = "lemmas"
-SUBGROUP_KEY = "subgroups"
-ASPECT_KEY = "aspects"
+SUBGROUPS_KEY = "subgroups"
+ASPECTS_KEY = "aspects"
 GENERAL_ASSERTION_KEY = "general_assertions"
 SUBGROUP_ASSERTION_KEY = "subgroup_assertions"
 ASPECT_ASSERTION_KEY = "aspect_assertions"
@@ -74,8 +74,8 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
             "source": get_wikipedia_source(concept),
         },
         LEMMAS_KEY: alias,
-        SUBGROUP_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
-        ASPECT_KEY: [subpart.to_dict() for subpart in subpart_list],
+        SUBGROUPS_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
+        ASPECTS_KEY: [subpart.to_dict() for subpart in subpart_list],
         GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in general_assertions],
         SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subgroup_assertions],
         ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subpart_assertions],
