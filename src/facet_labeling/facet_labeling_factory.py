@@ -20,11 +20,12 @@ class FacetLabelingFactory(object):
         self.batch_size = batch_size
 
     def label(self, assertion_list: List[Dict[str, Any]]) -> None:
-        facet_list, sentence_list = [], []
+        facet_list, source_list, sentence_list = [], [], []
 
         for assertion in assertion_list:
-            for facet in assertion["facets"]:
+            for facet, source in zip(assertion["facets"], assertion["source"]["in_sentence"]["facets_matches"]):
                 facet_list.append(facet)
+                source_list.append(source)
                 sentence_list.append(prepare(assertion, facet))
 
         logger.info('Labeling {} facets'.format(len(facet_list)))
@@ -51,14 +52,21 @@ class FacetLabelingFactory(object):
 
                 batch_cnt += 1
 
-        for facet, label in zip(facet_list, label_list):
+        for facet, source, label in zip(facet_list, source_list, label_list):
             facet["label"] = label
+            source["label"] = label
 
 
 def prepare(assertion: Dict[str, Union[str, Dict[str, str]]], facet: Dict[str, str]) -> str:
-    return " ".join(
-        [assertion["subject"], "[pred]", assertion["predicate"], "[obj]", assertion["object"], "[facet]",
-         get_facet_text(facet)])
+    return " ".join([
+        assertion["subject"],
+        "[pred]",
+        assertion["predicate"],
+        "[obj]",
+        assertion["object"],
+        "[facet]",
+        get_facet_text(facet)
+    ])
 
 
 def get_facet_text(facet: Dict[str, str]) -> str:

@@ -54,7 +54,7 @@ class SimpleAssertion(object):
         self.pred: str = data['predicate']
         self.obj: str = data['object']
         self.facets: List[SimpleFacet] = [SimpleFacet(facet) for facet in data['facets']]
-        self.source: str = data['source']
+        self.source: Dict = data['source']
 
     def get_triple_str(self) -> str:
         return self.subj + " " + self.pred + " " + self.obj

@@ -60,10 +60,12 @@ def facet_clustering(facet_counter: CounterType[SimpleFacet]) -> List[FacetClust
     if len(facet_list) <= 1:
         cluster_list = [facet_list]
     else:
-        cluster_list = hierarchical_clustering(facet_list,
-                                               distance_matrix=compute_facet_distance_matrix(facet_list),
-                                               linkage="single",
-                                               distance_threshold=0.3)
+        cluster_list = hierarchical_clustering(
+            facet_list,
+            distance_matrix=compute_facet_distance_matrix(facet_list),
+            linkage="single",
+            distance_threshold=0.3
+        )
     return [FacetCluster(cluster, facet_counter) for cluster in cluster_list if len(cluster) > 0]
 
 

@@ -10,27 +10,36 @@ from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, 
     STATISTICS_KEY
 from facet_grouping.facet_clustering import facet_clustering, FacetCluster
 from filepath_handler import get_final_kb_json_path, get_facet_labeled_json_path
-from helper.constants import PREPOSITIONS
 from retrieval.querying import has_hypernym
 from triple_clustering.simple_assertion import SimpleAssertion, SimpleFacet
 
 
 class AssertionCluster(object):
     def __init__(self, assertion_list: List[SimpleAssertion]):
+        # count identical expressions
         triple_counter: CounterType[SimpleAssertion] = Counter(assertion_list)
+        # find representative based on counts
         representative = find_representative_triple(triple_counter)
 
+        # representative subject, predicate and object, and total frequency of the assertion cluster
         self.subj: str = representative.subj
         self.pred, self.obj = reorganize_utterances(representative.pred, representative.obj)
         self.count: int = len(assertion_list)
 
-        self.expressions: List[CountedSimpleTriple] = [CountedSimpleTriple(assertion, count) for assertion, count in
-                                                       triple_counter.most_common()]
+        # list of expressions (spo only) with corresponding frequencies, sorted by frequency
+        self.expressions: List[CountedSimpleTriple] = [
+            CountedSimpleTriple(assertion, count) for assertion, count in triple_counter.most_common()
+        ]
 
+        # count identical facets
         facet_counter: CounterType[SimpleFacet] = get_facet_counter(assertion_list)
-        self.facets: List[FacetCluster] = sorted(facet_clustering(facet_counter), key=lambda facet: facet.count,
-                                                 reverse=True)
-        self.sources: List[str] = list(set(a.source for a in assertion_list if a.source is not None))
+        # list of grouped facets with corresponding frequencies, sorted by frequency
+        self.facets: List[FacetCluster] = sorted(
+            facet_clustering(facet_counter),
+            key=lambda facet: facet.count,
+            reverse=True
+        )
+        self.sources: List[Dict] = [a.source for a in assertion_list if a.source is not None]
 
     def to_dict(self) -> dict:
         return {
@@ -80,22 +89,24 @@ def find_representative_triple(triple_counter: Counter) -> SimpleAssertion:
 
 
 def reorganize_utterances(pred: str, obj: str) -> Tuple[str, str]:
-    # move all trailing prepositions from predicate to object
-    tokens_of_predicate = pred.split()
+    """Move all trailing prepositions from predicate to object."""
 
-    preps = []
-    while len(tokens_of_predicate) > 0 and tokens_of_predicate[-1] in PREPOSITIONS:
-        preps.append(tokens_of_predicate.pop())
-    preps.reverse()
-    preps.append(obj)
-
-    pred = " ".join(tokens_of_predicate)
-    obj = " ".join(preps)
+    # tokens_of_predicate = pred.split()
+    #
+    # preps = []
+    # while len(tokens_of_predicate) > 0 and tokens_of_predicate[-1] in PREPOSITIONS:
+    #     preps.append(tokens_of_predicate.pop())
+    # preps.reverse()
+    # preps.append(obj)
+    #
+    # pred = " ".join(tokens_of_predicate)
+    # obj = " ".join(preps)
 
     return pred, obj
 
 
 def get_facet_counter(assertion_list: List[SimpleAssertion]) -> Counter:
+    """Count identical facets"""
     facet_list = [facet for assertion in assertion_list for facet in assertion.facets]
     facet_counter: CounterType[SimpleFacet] = Counter(facet_list)
     for facet in facet_counter.keys():
@@ -107,13 +118,17 @@ def get_facet_counter(assertion_list: List[SimpleAssertion]) -> Counter:
     return facet_counter
 
 
-def group_subject_data(subject_data: Dict[str, Any]):
-    clusters: List[List[SimpleAssertion]] = [[SimpleAssertion(assertion) for assertion in cluster] for cluster in
-                                             subject_data["clusters"]]
+def group_subject_data(subject_data: Dict[str, Any]):  # {"subject": abc, "clusters": [[assertions of a cluster]]}
+    # load json data into python class
+    clusters: List[List[SimpleAssertion]] = [
+        [SimpleAssertion(assertion) for assertion in cluster] for cluster in subject_data["clusters"]
+    ]
+
+    # find representative for each cluster
     assertion_list = [AssertionCluster(cluster) for cluster in clusters]
 
-    subject_data["clusters"] = [assertion.to_dict() for assertion in assertion_list if
-                                len(assertion.pred) > 0]  # filter empty-predicate assertions
+    # filter empty-predicate assertions
+    subject_data["clusters"] = [assertion.to_dict() for assertion in assertion_list if len(assertion.pred) > 0]
 
     return subject_data
 
@@ -130,13 +145,13 @@ def group_for_one_subject(subject: Synset):
     with get_facet_labeled_json_path(subject).open() as f:
         data = json.load(f)
 
-    # remove incorrect subgroups
+    # remove incorrect subgroups by checking WordNet hypernym
     to_be_removed = set()
     existed = set()
     for subgroup in data[SUBGROUPS_KEY]:
         name = subgroup["name"]
         s_ss = wn.synsets(name.replace(" ", "_"), "n")
-        if len(s_ss) == 1:
+        if len(s_ss) == 1:  # found only one WordNet synset for the lemma => ideal!
             s_ss = s_ss[0]
             if (not has_hypernym(s_ss, subject)) or s_ss.name() in existed:
                 to_be_removed.add(name)
@@ -146,7 +161,7 @@ def group_for_one_subject(subject: Synset):
     data[SUBGROUPS_KEY] = [sg for sg in data[SUBGROUPS_KEY] if sg["name"] not in to_be_removed]
     data[SUBGROUP_ASSERTION_KEY] = [a for a in data[SUBGROUP_ASSERTION_KEY] if a["subject"] not in to_be_removed]
 
-    # remove duplicated subgroups
+    # remove duplicate subgroups
     ids_to_be_removed = set()
     names_existed = set()
     for i, subgroup in enumerate(data[SUBGROUPS_KEY]):
