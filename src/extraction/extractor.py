@@ -13,7 +13,8 @@ from extraction.extract_terms import extract_subgroups, extract_subparts, Subgro
 from extraction.stuffie import run_extraction
 from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_scores_path, get_url_path, \
     get_title_path, get_snippet_path
-from retrieval.doc_filter import get_wikipedia_url, get_wikipedia_source
+from retrieval.doc_filter import get_wikipedia_url, get_wikipedia_source, get_article
+from retrieval.querying import get_search_query
 
 FIRST_LEMMA_KEY = "first_lemma"
 WN_SYNSET_KEY = "wn_synset"
@@ -34,6 +35,7 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
                output_file: str = None):
     # get all relevant texts
     line_list, line_doc_id_list, num_doc_retrieved, num_doc_retained = get_relevant_texts(concept, doc_threshold)
+    relevant_doc_ids = set(line_doc_id_list)
 
     # OpenIE
     logger.info(f"Subject {concept.name()} - Running SpaCy, NeuralCoref and StuffIE...")
@@ -60,6 +62,8 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         titles = [line.strip() for line in f.readlines()]
     with get_snippet_path(concept).open() as f:
         snippets = [line.strip() for line in f.readlines()]
+    with get_relevant_scores_path(concept).open() as f:  # read file to get the ids of relevant articles
+        relevance_scores = [float(line) for line in f if line.strip()]
 
     # print results to json file
     logger.info(
@@ -78,9 +82,12 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         LEMMAS_KEY: alias,
         SUBGROUPS_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
         ASPECTS_KEY: [subpart.to_dict() for subpart in subpart_list],
-        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in general_assertions],
-        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in subgroup_assertions],
-        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in subpart_assertions],
+        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
+                                general_assertions],
+        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
+                                 subgroup_assertions],
+        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
+                               subpart_assertions],
         STATISTICS_KEY: {
             "num_doc_retrieved": num_doc_retrieved,
             "num_doc_retained": num_doc_retained,
@@ -93,13 +100,21 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
             "num_aspects": len(subpart_list),
             "num_facets": sum([len(a.facets) for a in (general_assertions + subgroup_assertions + subpart_assertions)]),
         },
-        BING_SEARCH_KEY: [
-            {
-                "url": url,
-                "title": title if title else None,
-                "snippet": snippet if snippet else None
-            } for url, title, snippet in zip(urls, titles, snippets)
-        ]
+        BING_SEARCH_KEY: {
+            "query": get_search_query(concept),
+            "results": [
+                {
+                    "i": i,
+                    "url": url,
+                    "title": title if title else None,
+                    "snippet": snippet if snippet else None,
+                    "is_reference": url.lower() == get_wikipedia_url(concept).lower(),
+                    "is_crawled": True if get_article(concept, i, url) else False,
+                    "is_retained": i in relevant_doc_ids,
+                    "relevance_score": relevance_scores[i],
+                } for i, (url, title, snippet) in enumerate(zip(urls, titles, snippets))
+            ]
+        }
     }
     if output_file is None:
         with get_kb_json_path(concept).open("w+", encoding="utf-8") as f:
