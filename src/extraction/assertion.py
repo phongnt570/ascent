@@ -205,7 +205,7 @@ class SimplifiedAssertion(object):
             ],
             "source": {
                 "doc_id": self.doc_id,
-                "url": urls[self.doc_id] if urls else None,
+                "url": urls[self.doc_id] if urls and self.doc_id is not None else None,
                 "in_sentence": get_sentence_source(
                     self.original_assertion.full_subj if self.original_assertion is not None else None,
                     self.original_assertion.full_pred if self.original_assertion is not None else None,
@@ -244,7 +244,7 @@ def get_sentence_source(subj, pred, obj, facets):
     if sentence is not None:
         tokens = [str(token) for token in sentence]
 
-        if isinstance(obj, Span) and sentence == sentence:
+        if isinstance(obj, Span) and obj.sent == sentence:
             obj_start = obj.start - sentence.start
             obj_end = obj.end - sentence.start
             obj_start_char = obj.start_char - sentence.start_char
@@ -329,7 +329,7 @@ class SimplifiedSubpartAssertion(SimplifiedAssertion):
             ],
             "source": {
                 "doc_id": self.doc_id,
-                "url": urls[self.doc_id] if urls else None,
+                "url": urls[self.doc_id] if urls and self.doc_id is not None else None,
                 "in_sentence": get_sentence_source(
                     self.subj_root,
                     self.pred_root,
