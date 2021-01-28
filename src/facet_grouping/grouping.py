@@ -7,7 +7,7 @@ from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
 from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, SUBGROUPS_KEY, \
-    STATISTICS_KEY
+    STATISTICS_KEY, BING_SEARCH_KEY
 from facet_grouping.facet_clustering import facet_clustering, FacetCluster
 from filepath_handler import get_final_kb_json_path, get_facet_labeled_json_path
 from retrieval.querying import has_hypernym
@@ -196,6 +196,7 @@ def group_for_one_subject(subject: Synset):
         "num_canonical_general_assertions": sum([len(name["clusters"]) for name in data[GENERAL_ASSERTION_KEY]]),
         "num_canonical_subgroup_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
         "num_canonical_aspect_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
+        "num_doc_crawled": len([r for r in data[BING_SEARCH_KEY]["results"] if r["is_crawled"]]),
     }),
 
     with get_final_kb_json_path(subject).open("w+", encoding="utf-8") as f:
