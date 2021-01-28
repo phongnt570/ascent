@@ -201,7 +201,7 @@ def extract_subpart_assertions(assertion_list: List[Assertion], target_subject: 
                                                                          pred=TOBE,
                                                                          obj=obj,
                                                                          facets=facets,
-                                                                         subj_root=assertion.full_obj))
+                                                                         subj_root=assertion.obj.doc[assertion.obj.i:(assertion.obj.i+1)]))
 
                 # add the possessives to the revised set
                 revised_possessives.update([t.dep == symbols.poss for t in assertion.full_obj])
@@ -241,7 +241,7 @@ def extract_subpart_assertions(assertion_list: List[Assertion], target_subject: 
                                                                      pred=TOBE,
                                                                      obj=obj,
                                                                      facets=facets,
-                                                                     subj_root=noun_chunk.doc[noun_chunk.root.i:noun_chunk.root.i+1]))
+                                                                     subj_root=noun_chunk.doc[noun_chunk.root.i:(noun_chunk.root.i+1)]))
 
     # sort and filter out unwanted assertions
     subpart_assertions = sorted(filter_assertion_list(subpart_assertions),
