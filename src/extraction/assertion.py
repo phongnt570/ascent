@@ -1,6 +1,6 @@
 import json
 from collections import Counter
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Union
 
 from nltk.corpus import wordnet as wn
 from spacy import symbols
@@ -203,13 +203,15 @@ class SimplifiedAssertion(object):
                 "doc_id": self.doc_id,
                 "url": urls[self.doc_id] if urls else None,
                 "in_sentence": get_sentence_source(
-                    self.original_assertion.full_subj if self.original_assertion is not None else None, self.obj),
+                    self.original_assertion.full_subj if self.original_assertion is not None else None,
+                    self.original_assertion.full_pred if self.original_assertion is not None else None,
+                    self.obj),
             }
             # "source": str(self.obj.sent) if isinstance(self.obj, Span) else None
         }
 
 
-def get_sentence_source(subj, obj):
+def get_sentence_source(subj, pred, obj):
     sentence = None
     tokens = None
 
@@ -217,6 +219,8 @@ def get_sentence_source(subj, obj):
     obj_end = None
     obj_start_char = None
     obj_end_char = None
+
+    pred_matches = []
 
     subj_start = None
     subj_end = None
@@ -232,7 +236,16 @@ def get_sentence_source(subj, obj):
         obj_start_char = obj.start_char - obj.sent.start_char
         obj_end_char = obj.end_char - obj.sent.start_char
 
-        if isinstance(subj, Span):
+        if pred is not None and len(pred) > 0 and isinstance(pred[0], Token) and pred[0].sent == obj.sent:
+            for pred_tok in pred:
+                pred_matches.append({
+                    # "token": pred_tok.text,
+                    "i": pred_tok.i - obj.sent.start,
+                    "start_char": pred_tok.idx - obj.sent.start_char,
+                    "end_char": pred_tok.idx + len(pred_tok) - obj.sent.start_char,
+                })
+
+        if isinstance(subj, Span) and subj.sent == obj.sent:
             subj_start = subj.start - obj.sent.start
             subj_end = subj.end - obj.sent.start
             subj_start_char = subj.start_char - obj.sent.start_char
@@ -241,14 +254,15 @@ def get_sentence_source(subj, obj):
     return {
         "sentence": sentence,
         "tokens": tokens,
-        "obj_start": obj_start,
-        "obj_end": obj_end,
-        "obj_start_char": obj_start_char,
-        "obj_end_char": obj_end_char,
         "subj_start": subj_start,
         "subj_end": subj_end,
         "subj_start_char": subj_start_char,
         "subj_end_char": subj_end_char,
+        "pred_matches": pred_matches,
+        "obj_start": obj_start,
+        "obj_end": obj_end,
+        "obj_start_char": obj_start_char,
+        "obj_end_char": obj_end_char,
     }
 
 
@@ -317,7 +331,7 @@ class SamePredicateAssertion(object):
         self.same_object_assertion_list = same_object_assertion_list
 
 
-def simplify_predicate(predicate: Any) -> str:
+def simplify_predicate(predicate: Union[str, List[Token]]) -> str:
     if isinstance(predicate, str):
         return predicate.strip("$")
 
