@@ -15,7 +15,7 @@ class SimpleFacet(object):
         super().__init__()
         self.connector: str = data['connector']
         self.statement: str = data['statement']
-        self.label: str = data['label'] if 'label' in data else None
+        self.label: str = data.get('label', None)
 
     def __hash__(self):
         return hash(self.get_facet_str().lower())

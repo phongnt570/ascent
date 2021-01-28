@@ -172,7 +172,8 @@ def extract_subpart_assertions(assertion_list: List[Assertion], target_subject: 
                                                                      subj=subj_subpart,
                                                                      pred=assertion.full_pred,
                                                                      obj=assertion.full_obj,
-                                                                     facets=assertion.facets))
+                                                                     facets=assertion.facets,
+                                                                     subj_root=assertion.full_subj))
                 assertion.subpart_revised = True
 
             # object is subpart: <subject/subgroup ; predicate ; adj + subpart> -> <subpart ; be ; adj>
@@ -199,7 +200,8 @@ def extract_subpart_assertions(assertion_list: List[Assertion], target_subject: 
                                                                          subj=subj_subpart,
                                                                          pred=TOBE,
                                                                          obj=obj,
-                                                                         facets=facets))
+                                                                         facets=facets,
+                                                                         subj_root=assertion.full_obj))
 
                 # add the possessives to the revised set
                 revised_possessives.update([t.dep == symbols.poss for t in assertion.full_obj])
@@ -238,7 +240,8 @@ def extract_subpart_assertions(assertion_list: List[Assertion], target_subject: 
                                                                      subj=subpart.name,
                                                                      pred=TOBE,
                                                                      obj=obj,
-                                                                     facets=facets))
+                                                                     facets=facets,
+                                                                     subj_root=noun_chunk.doc[noun_chunk.root.i:noun_chunk.root.i+1]))
 
     # sort and filter out unwanted assertions
     subpart_assertions = sorted(filter_assertion_list(subpart_assertions),

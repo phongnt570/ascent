@@ -240,7 +240,7 @@ class Subpart(object):
     def __init__(self, name: str):
         self.name = name
         self.phrase_counter = Counter()
-        self.chunk_list = []
+        self.chunk_list: List[Span] = []
 
     def add_phrase(self, phrase: str, count: int = 1) -> None:
         self.phrase_counter += {phrase: count}

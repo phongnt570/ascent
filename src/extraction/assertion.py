@@ -71,10 +71,13 @@ class Assertion(object):
         self.subpart_revised: bool = False
 
         self.doc_id = None
+        doc = None
         if isinstance(self.obj, Span) or isinstance(self.obj, Token):
-            self.doc_id = self.obj.doc.user_data["doc_id"]
+            doc = self.obj.doc
         elif isinstance(self.full_obj, Span) or isinstance(self.full_obj, Token):
-            self.doc_id = self.full_obj.doc.user_data["doc_id"]
+            doc = self.full_obj.doc
+        if doc is not None:
+            self.doc_id = doc.user_data.get("doc_id", None)
 
     def __str__(self):
         return self.to_json_dict()
@@ -94,7 +97,8 @@ class Assertion(object):
                 ],
                 "source": {
                     "doc_id": self.doc_id,
-                    "url": urls[self.doc_id] if urls is not None and self.doc_id is not None else None
+                    "url": urls[self.doc_id] if urls is not None and self.doc_id is not None else None,
+                    "in_sentence": get_sentence_source(self.full_subj, self.full_pred, self.full_obj, self.facets)
                 }
                 # "source": self.obj.sent if isinstance(self.obj, Span) else None
             }
@@ -205,13 +209,14 @@ class SimplifiedAssertion(object):
                 "in_sentence": get_sentence_source(
                     self.original_assertion.full_subj if self.original_assertion is not None else None,
                     self.original_assertion.full_pred if self.original_assertion is not None else None,
-                    self.obj),
+                    self.obj,
+                    self.facets
+                ),
             }
-            # "source": str(self.obj.sent) if isinstance(self.obj, Span) else None
         }
 
 
-def get_sentence_source(subj, pred, obj):
+def get_sentence_source(subj, pred, obj, facets):
     sentence = None
     tokens = None
 
@@ -227,32 +232,61 @@ def get_sentence_source(subj, pred, obj):
     subj_start_char = None
     subj_end_char = None
 
+    facets_matches = []
+
     if isinstance(obj, Span):
-        sentence = str(obj.sent)
-        tokens = [str(token) for token in obj.sent]
+        sentence = obj.sent
+    elif pred is not None and len(pred) > 0 and isinstance(pred[0], Token):
+        sentence = pred[0].sent
+    elif facets is not None and len(facets) > 0 and facets[0].full_statement is not None:
+        sentence = facets[0].full_statement[0].sent
 
-        obj_start = obj.start - obj.sent.start
-        obj_end = obj.end - obj.sent.start
-        obj_start_char = obj.start_char - obj.sent.start_char
-        obj_end_char = obj.end_char - obj.sent.start_char
+    if sentence is not None:
+        tokens = [str(token) for token in sentence]
 
-        if pred is not None and len(pred) > 0 and isinstance(pred[0], Token) and pred[0].sent == obj.sent:
+        if isinstance(obj, Span) and sentence == sentence:
+            obj_start = obj.start - sentence.start
+            obj_end = obj.end - sentence.start
+            obj_start_char = obj.start_char - sentence.start_char
+            obj_end_char = obj.end_char - sentence.start_char
+
+        if pred is not None and len(pred) > 0 and isinstance(pred[0], Token) and pred[0].sent == sentence:
             for pred_tok in pred:
                 pred_matches.append({
                     # "token": pred_tok.text,
-                    "i": pred_tok.i - obj.sent.start,
-                    "start_char": pred_tok.idx - obj.sent.start_char,
-                    "end_char": pred_tok.idx + len(pred_tok) - obj.sent.start_char,
+                    "start": pred_tok.i - sentence.start,
+                    "end": pred_tok.i + 1 - sentence.start,
+                    "start_char": pred_tok.idx - sentence.start_char,
+                    "end_char": pred_tok.idx + len(pred_tok) - sentence.start_char,
                 })
 
-        if isinstance(subj, Span) and subj.sent == obj.sent:
-            subj_start = subj.start - obj.sent.start
-            subj_end = subj.end - obj.sent.start
-            subj_start_char = subj.start_char - obj.sent.start_char
-            subj_end_char = subj.end_char - obj.sent.start_char
+        if isinstance(subj, Span) and subj.sent == sentence:
+            subj_start = subj.start - sentence.start
+            subj_end = subj.end - sentence.start
+            subj_start_char = subj.start_char - sentence.start_char
+            subj_end_char = subj.end_char - sentence.start_char
+
+        if facets is not None:
+            for facet in facets:
+                matches = []
+                facet_tokens = []
+                if facet.full_connector is not None:
+                    facet_tokens.extend(token for token in facet.full_connector)
+                if facet.full_statement is not None:
+                    facet_tokens.extend(token for token in facet.full_statement)
+                for token in facet_tokens:
+                    matches.append({
+                        "start": token.i - sentence.start,
+                        "end": token.i + 1 - sentence.start,
+                        "start_char": token.idx - sentence.start_char,
+                        "end_char": token.idx + len(token) - sentence.start_char,
+                    })
+                facets_matches.append({
+                    "matches": matches
+                })
 
     return {
-        "sentence": sentence,
+        "sentence": str(sentence),
         "tokens": tokens,
         "subj_start": subj_start,
         "subj_end": subj_end,
@@ -263,12 +297,14 @@ def get_sentence_source(subj, pred, obj):
         "obj_end": obj_end,
         "obj_start_char": obj_start_char,
         "obj_end_char": obj_end_char,
+        "facets_matches": facets_matches,
     }
 
 
 class SimplifiedSubpartAssertion(SimplifiedAssertion):
     # noinspection PyMissingConstructor
-    def __init__(self, subject_name: str, subj: str, pred: Optional[List[Token]], obj: Span, facets=None):
+    def __init__(self, subject_name: str, subj: str, pred: Optional[List[Token]], obj: Span, facets=None,
+                 subj_root: Span = None):
         if facets is None:
             facets = []
         self.subject_name = subject_name
@@ -278,8 +314,30 @@ class SimplifiedSubpartAssertion(SimplifiedAssertion):
         self.facets = [facet for facet in facets if
                        facet.full_statement is None or len(facet.full_statement) <= MAX_FACET_LENGTH]
 
-        self.doc_id = self.obj.doc.user_data["doc_id"]
-        self.original_assertion = None
+        self.doc_id = self.obj.doc.user_data.get("doc_id", None)
+        self.subj_root = subj_root
+        self.pred_root = pred
+
+    def to_dict(self, simplifies_object: bool = False, urls: List[str] = None) -> dict:
+        return {
+            'subject': str(self.subj),
+            'predicate': str(self.pred),
+            'object': finalize_object(self.obj) if (simplifies_object and self.obj is not None) else str(
+                self.obj) if self.obj is not None else None,
+            'facets': [
+                facet.to_dict() for facet in self.facets
+            ],
+            "source": {
+                "doc_id": self.doc_id,
+                "url": urls[self.doc_id] if urls else None,
+                "in_sentence": get_sentence_source(
+                    self.subj_root,
+                    self.pred_root,
+                    self.obj,
+                    self.facets
+                ),
+            }
+        }
 
 
 class SameObjectAssertion(object):

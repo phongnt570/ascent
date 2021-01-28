@@ -2,7 +2,7 @@ import json
 from typing import List
 
 from spacy import symbols
-from spacy.tokens import Token
+from spacy.tokens import Token, Span
 
 from helper.constants import SPECIAL_FACET_CONNECTORS
 from extraction.supporting import get_span, find_long_phrase, get_target, find_head_of_preposition_facet, find_object, \
@@ -95,7 +95,7 @@ def complete_adverb_facet(adverb):
     return get_span(phrase)
 
 
-def find_statement_for_non_objective_prep(prep):
+def find_statement_for_non_objective_prep(prep) -> Span:
     # multiple prep, e.g "compared --(prep)-- to ..."
     prep_list = [child for child in prep.children if child.dep == symbols.prep]
     if len(prep_list) > 0:
