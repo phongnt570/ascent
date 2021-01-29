@@ -10,6 +10,7 @@ from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, 
     STATISTICS_KEY, BING_SEARCH_KEY
 from facet_grouping.facet_clustering import facet_clustering, FacetCluster
 from filepath_handler import get_final_kb_json_path, get_facet_labeled_json_path
+from helper.constants import PREPOSITIONS
 from retrieval.querying import has_hypernym
 from triple_clustering.simple_assertion import SimpleAssertion, SimpleFacet
 
@@ -23,6 +24,8 @@ class AssertionCluster(object):
 
         # representative subject, predicate and object, and total frequency of the assertion cluster
         self.subj: str = representative.subj
+        # modify predicate and object of the representative: move all trailing prepositions from predicate to object
+        # this makes it easier to group the assertions with the same predicate
         self.pred, self.obj = reorganize_utterances(representative.pred, representative.obj)
         self.count: int = len(assertion_list)
 
@@ -56,7 +59,9 @@ class AssertionCluster(object):
 class CountedSimpleTriple(object):
     def __init__(self, assertion: SimpleAssertion, count: int):
         self.subj = assertion.subj
-        self.pred, self.obj = reorganize_utterances(assertion.pred, assertion.obj)
+        # self.pred, self.obj = reorganize_utterances(assertion.pred, assertion.obj)
+        self.pred = assertion.pred
+        self.obj = assertion.obj
         self.count = count
 
     def to_dict(self) -> dict:
@@ -91,16 +96,16 @@ def find_representative_triple(triple_counter: Counter) -> SimpleAssertion:
 def reorganize_utterances(pred: str, obj: str) -> Tuple[str, str]:
     """Move all trailing prepositions from predicate to object."""
 
-    # tokens_of_predicate = pred.split()
-    #
-    # preps = []
-    # while len(tokens_of_predicate) > 0 and tokens_of_predicate[-1] in PREPOSITIONS:
-    #     preps.append(tokens_of_predicate.pop())
-    # preps.reverse()
-    # preps.append(obj)
-    #
-    # pred = " ".join(tokens_of_predicate)
-    # obj = " ".join(preps)
+    tokens_of_predicate = pred.split()
+
+    preps = []
+    while len(tokens_of_predicate) > 0 and tokens_of_predicate[-1] in PREPOSITIONS:
+        preps.append(tokens_of_predicate.pop())
+    preps.reverse()
+    preps.append(obj)
+
+    pred = " ".join(tokens_of_predicate)
+    obj = " ".join(preps)
 
     return pred, obj
 
