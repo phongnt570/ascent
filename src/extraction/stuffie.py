@@ -89,6 +89,7 @@ def run_extraction(lines: List[str], doc_ids: List[int], spacy_nlp: Language, su
         new_line = plural_subject + " " + verb + " " + str(doc[1:])
 
         new_doc = spacy_nlp(new_line)
+        new_doc.user_data["doc_id"] = doc.user_data["doc_id"]
         s = Stuffie(list(new_doc.sents)[0])
         s.parse()
         assertion_list.extend(s.assertions)
