@@ -1,6 +1,7 @@
 """Containing functions to extract all kinds of assertions given a subject."""
 import json
 import logging
+from collections import Counter
 from typing import List, Tuple, Dict, Set
 
 from nltk.corpus.reader.wordnet import Synset
@@ -16,7 +17,7 @@ from filepath_handler import get_article_dir, get_kb_json_path, get_relevant_sco
 from retrieval.doc_filter import get_wikipedia_url, get_wikipedia_source, get_article
 from retrieval.querying import get_search_query
 
-FIRST_LEMMA_KEY = "first_lemma"
+PROMINENT_LEMMA_KEY = "prominent_lemma"
 WN_SYNSET_KEY = "wn_synset"
 WIKIPEDIA_KEY = "wikipedia"
 LEMMAS_KEY = "lemmas"
@@ -70,7 +71,7 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         f"Subject {concept.name()} - Printing results to JSON file: "
         f"{output_file if output_file else get_kb_json_path(concept)}...")
     json_obj = {
-        FIRST_LEMMA_KEY: concept_name,
+        PROMINENT_LEMMA_KEY: get_prominent_lemma(concept, general_assertions),
         WN_SYNSET_KEY: {
             "synset_id": concept.name(),
             "offset_id": get_wn_id(concept),
@@ -79,7 +80,8 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
             "url": get_wikipedia_url(concept),
             "source": get_wikipedia_source(concept),
         },
-        LEMMAS_KEY: alias,
+        LEMMAS_KEY: subject_list,
+        # LEMMAS_KEY: alias,
         SUBGROUPS_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
         ASPECTS_KEY: [subpart.to_dict() for subpart in subpart_list],
         GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
@@ -124,6 +126,13 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
             json.dump(json_obj, f, ensure_ascii=False, indent=2, sort_keys=False)
 
 
+def get_prominent_lemma(subject: Synset, general_assertions: List[SimplifiedAssertion]) -> str:
+    if not general_assertions:
+        return get_concept_name(subject)
+    subject_counter = Counter(a.subj for a in general_assertions)
+    return subject_counter.most_common(1)[0][0]
+
+
 def get_wn_id(synset: Synset) -> str:
     return f"wn:{str(synset.offset()).zfill(8)}n"
 
@@ -144,7 +153,7 @@ def extract(subject: str, target_subject: str, doc_list: List[Doc], assertion_li
         general_assertions, subgroup_assertions = [], []
         subpart_assertions = []
     else:
-        logger.info(f"Subject {target_subject} - alias: {subject}")
+        logger.info(f"Subject: {target_subject} ; Lemma: {subject}")
         # related terms
         subgroup_list = extract_subgroups(doc_list, subject, spacy_nlp)
         subpart_list = extract_subparts(doc_list, assertion_list, subject)
@@ -180,8 +189,8 @@ def merge(target_subject: str, extractions: List[Dict[str, List]], alias: List[s
     # general assertions
     general_assertions: List[SimplifiedAssertion] = [assertion for extraction in extractions for assertion in
                                                      extraction['general_assertions']]
-    for assertion in general_assertions:
-        assertion.subj = target_subject  # change back to target subject for consistency
+    # for assertion in general_assertions:
+    #     assertion.subj = target_subject  # change back to target subject for consistency
 
     # subgroup assertions
     subgroup_assertions: List[SimplifiedAssertion] = [assertion for extraction in extractions for assertion in

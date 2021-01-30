@@ -10,7 +10,8 @@ from typing import List, Dict, Tuple
 from nltk.corpus import wordnet as wn
 from nltk.corpus.reader.wordnet import Synset
 
-from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, STATISTICS_KEY
+from extraction.extractor import GENERAL_ASSERTION_KEY, SUBGROUP_ASSERTION_KEY, ASPECT_ASSERTION_KEY, STATISTICS_KEY, \
+    PROMINENT_LEMMA_KEY
 from filepath_handler import get_kb_json_path, get_triple_clusters_json_path
 from helper.argument_parser import split_subjects_to_gpus
 from pipeline.module_interface import Module
@@ -85,7 +86,8 @@ def run_triple_clustering_for_subject(subject: Synset, factory: TripleClustering
 
     logger.info(f'Subject {subject.name()} - Clustering general triples')
     general_assertion_list = get_assertion_list(data, key=GENERAL_ASSERTION_KEY)
-    general_clusters = bert_based_triple_clustering(general_assertion_list, factory)
+    general_clusters = bert_based_triple_clustering(general_assertion_list, factory,
+                                                    prominent_lemma=data[PROMINENT_LEMMA_KEY])
 
     logger.info(f'Subject {subject.name()} - Clustering subgroup triples')
     sub_group_assertion_list = get_assertion_list(data, key=SUBGROUP_ASSERTION_KEY)
@@ -106,6 +108,12 @@ def run_triple_clustering_for_subject(subject: Synset, factory: TripleClustering
         "num_canonical_subgroup_assertions": sum([len(name["clusters"]) for name in data[SUBGROUP_ASSERTION_KEY]]),
         "num_canonical_aspect_assertions": sum([len(name["clusters"]) for name in data[ASPECT_ASSERTION_KEY]]),
     })
+
+    # update prominent lemma:
+    # if data[GENERAL_ASSERTION_KEY]:
+    #     data[PROMINENT_LEMMA_KEY] = data[GENERAL_ASSERTION_KEY][0]["subject"]
+    # else:
+    #     data[PROMINENT_LEMMA_KEY] = get_concept_name(subject)
 
     return data
 
@@ -140,12 +148,15 @@ def read_original_assertions_from_json(subject: Synset) -> dict:
     return data
 
 
-def bert_based_triple_clustering(assertion_list: List[SimpleAssertion], factory: TripleClusteringFactory) \
-        -> Dict[str, List[List[SimpleAssertion]]]:
+def bert_based_triple_clustering(assertion_list: List[SimpleAssertion], factory: TripleClusteringFactory,
+                                 prominent_lemma: str = None) -> Dict[str, List[List[SimpleAssertion]]]:
     """Main function for BERT-based approach to triple clustering."""
 
     # group same subjects
-    subject2assertion_list = same_subject_grouping(assertion_list)
+    if not prominent_lemma:
+        subject2assertion_list = same_subject_grouping(assertion_list)
+    else:  # pick the lemma with most assertions as representative
+        subject2assertion_list = {prominent_lemma: assertion_list}
 
     # clustering
     subject2clusters = {}
