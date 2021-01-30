@@ -201,7 +201,7 @@ def merge(target_subject: str, extractions: List[Dict[str, List]], alias: List[s
     g_idx: Set[int] = set()
     for idx, assertion in enumerate(subgroup_assertions):
         if assertion.subj in alias_set:
-            assertion.subj = target_subject
+            # assertion.subj = target_subject # change back to target subject for consistency
             general_assertions.append(assertion)
             g_idx.add(idx)
     subgroup_assertions = [sga for idx, sga in enumerate(subgroup_assertions) if idx not in g_idx]
