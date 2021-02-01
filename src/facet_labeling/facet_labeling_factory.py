@@ -25,8 +25,10 @@ class FacetLabelingFactory(object):
         for assertion in assertion_list:
             if len(assertion["facets"]) != len(assertion["source"]["facets_matches"]):
                 logger.warning(f"Facets and sources do not match: "
-                               f"{assertion['subject']} ; {assertion['predicate']} ; {assertion['object']}")
-                continue
+                               f"{assertion['subject']} ; {assertion['predicate']} ; {assertion['object']}. "
+                               f"Created fake positions (Nones).")
+                assertion["source"]["facets_matches"] = [{"matches": {"start": None, "end": None, "start_char": None,
+                                                                      "end_char": None}}] * len(assertion["facets"])
             for facet, source in zip(assertion["facets"], assertion["source"]["facets_matches"]):
                 facet_list.append(facet)
                 source_list.append(source)

@@ -4,7 +4,7 @@ from collections import Counter
 from typing import List, Set, Dict
 
 import numpy as np
-from nltk.corpus import wordnet
+from nltk.corpus import wordnet as wn
 from sklearn.cluster import AgglomerativeClustering
 from spacy import symbols
 from spacy.language import Language
@@ -197,7 +197,7 @@ def get_antonyms_of_token_list(token_list: List[Token]) -> Set[str]:
     antonyms = set()
     for token in token_list:
         word = token.lemma_.lower()
-        for syn in wordnet.synsets(word):
+        for syn in wn.synsets(word):
             for lemma in syn.lemmas():
                 if lemma.antonyms():
                     antonyms.add(lemma.antonyms()[0].name())
