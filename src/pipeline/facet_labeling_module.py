@@ -71,6 +71,6 @@ class FacetLabelingModule(Module):
         for data in data_list:
             subject: str = data[WN_SYNSET_KEY]["synset_id"]
             with get_facet_labeled_json_path(subject).open("w+", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
+                json.dump(data, f, ensure_ascii=False, sort_keys=False)
 
         logger.info('Job on GPU={} finished!'.format(cuda_device))

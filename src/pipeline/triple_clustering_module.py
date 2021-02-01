@@ -67,7 +67,7 @@ class TripleClusteringModule(Module):
                 logger.info(f"Subject {concept.name()} - Run triple clustering")
                 data = run_triple_clustering_for_subject(concept, factory)
                 with get_triple_clusters_json_path(concept).open("w+", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
+                    json.dump(data, f, ensure_ascii=False, sort_keys=False)
                 logger.info(f"Subject {concept.name()} - Triple clustering is done")
             except Exception as err:
                 logger.critical(f"{subject}, {err}")

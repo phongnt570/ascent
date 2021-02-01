@@ -120,10 +120,10 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
     }
     if output_file is None:
         with get_kb_json_path(concept).open("w+", encoding="utf-8") as f:
-            json.dump(json_obj, f, ensure_ascii=False, indent=2, sort_keys=False)
+            json.dump(json_obj, f, ensure_ascii=False, sort_keys=False)
     else:
         with open(output_file, "w+", encoding="utf-8") as f:
-            json.dump(json_obj, f, ensure_ascii=False, indent=2, sort_keys=False)
+            json.dump(json_obj, f, ensure_ascii=False, sort_keys=False)
 
 
 def get_prominent_lemma(subject: Synset, general_assertions: List[SimplifiedAssertion]) -> str:

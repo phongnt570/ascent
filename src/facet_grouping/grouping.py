@@ -205,6 +205,6 @@ def group_for_one_subject(subject: Synset):
     }),
 
     with get_final_kb_json_path(subject).open("w+", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2, sort_keys=False)
+        json.dump(data, f, ensure_ascii=False, sort_keys=False)
 
     return data
