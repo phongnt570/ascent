@@ -28,6 +28,7 @@ SUBGROUP_ASSERTION_KEY = "subgroup_assertions"
 ASPECT_ASSERTION_KEY = "aspect_assertions"
 STATISTICS_KEY = "statistics"
 BING_SEARCH_KEY = "bing_search"
+SENTENCES_KEY = "sentences"
 
 logger = logging.getLogger(__name__)
 
@@ -84,12 +85,9 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
         # LEMMAS_KEY: alias,
         SUBGROUPS_KEY: [subgroup.to_dict() for subgroup in subgroup_list],
         ASPECTS_KEY: [subpart.to_dict() for subpart in subpart_list],
-        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
-                                general_assertions],
-        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
-                                 subgroup_assertions],
-        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True, urls=urls) for assertion in
-                               subpart_assertions],
+        GENERAL_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in general_assertions],
+        SUBGROUP_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subgroup_assertions],
+        ASPECT_ASSERTION_KEY: [assertion.to_dict(simplifies_object=True) for assertion in subpart_assertions],
         STATISTICS_KEY: {
             "num_doc_retrieved": num_doc_retrieved,
             "num_doc_retained": num_doc_retained,
@@ -116,7 +114,8 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
                     "relevance_score": relevance_scores[i],
                 } for i, (url, title, snippet) in enumerate(zip(urls, titles, snippets))
             ]
-        }
+        },
+        SENTENCES_KEY: get_sentences([a for a in (general_assertions + subgroup_assertions + subpart_assertions)])
     }
     if output_file is None:
         with get_kb_json_path(concept).open("w+", encoding="utf-8") as f:
@@ -124,6 +123,20 @@ def single_run(concept: Synset, spacy_nlp: Language, doc_threshold: float, alias
     else:
         with open(output_file, "w+", encoding="utf-8") as f:
             json.dump(json_obj, f, ensure_ascii=False, sort_keys=False)
+
+
+def get_sentences(assertion_list: List[SimplifiedAssertion]):
+    result = {}
+    for a in assertion_list:
+        sent = a.get_source_sentence()
+        if sent is None:
+            continue
+        result[a.__hash__()] = {
+            "doc_id": a.doc_id,
+            "text": sent.text,
+            "tokens": [token.text for token in sent],
+        }
+    return result
 
 
 def get_prominent_lemma(subject: Synset, general_assertions: List[SimplifiedAssertion]) -> str:

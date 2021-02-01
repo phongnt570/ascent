@@ -23,7 +23,11 @@ class FacetLabelingFactory(object):
         facet_list, source_list, sentence_list = [], [], []
 
         for assertion in assertion_list:
-            for facet, source in zip(assertion["facets"], assertion["source"]["in_sentence"]["facets_matches"]):
+            if len(assertion["facets"]) != len(assertion["source"]["facets_matches"]):
+                logger.warning(f"Facets and sources do not match: "
+                               f"{assertion['subject']} ; {assertion['predicate']} ; {assertion['object']}")
+                continue
+            for facet, source in zip(assertion["facets"], assertion["source"]["facets_matches"]):
                 facet_list.append(facet)
                 source_list.append(source)
                 sentence_list.append(prepare(assertion, facet))
