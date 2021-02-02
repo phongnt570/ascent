@@ -131,8 +131,8 @@ def get_sentences(assertion_list: List[SimplifiedAssertion]):
         sent = a.get_source_sentence()
         if sent is None:
             continue
-        result[a.__hash__()] = {
-            "doc_id": a.doc_id,
+        result[str(sent.__hash__())] = {
+            "doc_id": sent.doc.user_data.get("doc_id", None),
             "text": sent.text,
             "tokens": [token.text for token in sent],
         }

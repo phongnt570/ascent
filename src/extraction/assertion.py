@@ -70,17 +70,7 @@ class Assertion(object):
 
         self.subpart_revised: bool = False
 
-        self.doc_id = None
-        sent = self.get_source_sentence()
-        if sent is not None:
-            self.doc_id = sent.doc.user_data.get("doc_id", None)
-        # doc = None
-        # if isinstance(self.obj, Span) or isinstance(self.obj, Token):
-        #     doc = self.obj.doc
-        # elif isinstance(self.full_obj, Span) or isinstance(self.full_obj, Token):
-        #     doc = self.full_obj.doc
-        # if doc is not None:
-        #     self.doc_id = doc.user_data.get("doc_id", None)
+        self.source_sentence = get_source_sentence(self.full_pred, self.full_obj, self.facets)
 
     def __str__(self):
         return self.to_json_dict()
@@ -89,7 +79,7 @@ class Assertion(object):
         return json.dumps(self.to_dict(), indent=2)
 
     def get_source_sentence(self):
-        return get_source_sentence(self.full_pred, self.full_obj, self.facets)
+        return self.source_sentence
 
     def to_dict(self, simplify: bool = False) -> Dict[str, Any]:
         if not simplify:
@@ -101,13 +91,7 @@ class Assertion(object):
                 "facets": [
                     facet.to_dict() for facet in self.facets
                 ],
-                "source": get_positions_in_sentence(self.full_subj, self.full_pred, self.full_obj, self.facets),
-                # "source": {
-                #     # "doc_id": self.doc_id,
-                #     # "url": urls[self.doc_id] if urls is not None and self.doc_id is not None else None,
-                #     # "in_sentence": get_positions_in_sentence(self.full_subj, self.full_pred, self.full_obj, self.facets)
-                # }
-                # "source": self.obj.sent if isinstance(self.obj, Span) else None
+                "source": get_positions_in_sentence(self, self.full_subj, self.full_pred, self.full_obj, self.facets),
             }
         else:
             p = SimplifiedAssertion(self).to_dict(simplifies_object=True)
@@ -190,7 +174,11 @@ class SimplifiedAssertion(object):
         self.facets = [f for f in assertion.facets if
                        f.full_statement is None or len(f.full_statement) <= MAX_FACET_LENGTH]
 
-        self.doc_id = self.original_assertion.doc_id
+        self.source_sentence = get_source_sentence(
+            self.original_assertion.full_pred if self.original_assertion is not None else None,
+            self.obj,
+            self.facets
+        )
 
     def __hash__(self):
         return hash(self.get_triple_str().lower())
@@ -202,11 +190,7 @@ class SimplifiedAssertion(object):
         return str(self.subj) + " " + self.pred + " " + str(self.obj)
 
     def get_source_sentence(self) -> Span:
-        return get_source_sentence(
-            self.original_assertion.full_pred if self.original_assertion is not None else None,
-            self.obj,
-            self.facets
-        )
+        return self.source_sentence
 
     def to_dict(self, simplifies_object: bool = False) -> dict:
         return {
@@ -218,26 +202,16 @@ class SimplifiedAssertion(object):
                 facet.to_dict() for facet in self.facets
             ],
             "source": get_positions_in_sentence(
+                self,
                 self.original_assertion.full_subj if self.original_assertion is not None else None,
                 self.original_assertion.full_pred if self.original_assertion is not None else None,
                 self.obj,
                 self.facets
             ),
-            # "source": {
-            #     # "doc_id": self.doc_id,
-            #     # "url": urls[self.doc_id] if urls and self.doc_id is not None else None,
-            #     # "in_sentence": get_positions_in_sentence(
-            #     #     self.original_assertion.full_subj if self.original_assertion is not None else None,
-            #     #     self.original_assertion.full_pred if self.original_assertion is not None else None,
-            #     #     self.obj,
-            #     #     self.facets
-            #     # ),
-            # }
         }
 
 
 class SimplifiedSubpartAssertion(SimplifiedAssertion):
-    # noinspection PyMissingConstructor
     def __init__(self, subject_name: str, subj: str, pred: Optional[List[Token]], obj: Span, facets=None,
                  subj_root: Span = None):
         if facets is None:
@@ -249,12 +223,9 @@ class SimplifiedSubpartAssertion(SimplifiedAssertion):
         self.facets = [facet for facet in facets if
                        facet.full_statement is None or len(facet.full_statement) <= MAX_FACET_LENGTH]
 
-        self.doc_id = self.obj.doc.user_data.get("doc_id", None)
         self.subj_root = subj_root
         self.pred_root = pred
-
-    def get_source_sentence(self) -> Span:
-        return get_source_sentence(
+        self.source_sentence = get_source_sentence(
             self.pred_root,
             self.obj,
             self.facets
@@ -270,21 +241,12 @@ class SimplifiedSubpartAssertion(SimplifiedAssertion):
                 facet.to_dict() for facet in self.facets
             ],
             "source": get_positions_in_sentence(
+                self,
                 self.subj_root,
                 self.pred_root,
                 self.obj,
                 self.facets
             ),
-            # "source": {
-            #     # "doc_id": self.doc_id,
-            #     # "url": urls[self.doc_id] if urls and self.doc_id is not None else None,
-            #     # "in_sentence": get_positions_in_sentence(
-            #     #     self.subj_root,
-            #     #     self.pred_root,
-            #     #     self.obj,
-            #     #     self.facets
-            #     # ),
-            # }
         }
 
 
@@ -299,8 +261,8 @@ def get_source_sentence(pred, obj, facets) -> Span:
     return sentence
 
 
-def get_positions_in_sentence(subj, pred, obj, facets):
-    sentence = get_source_sentence(pred, obj, facets)
+def get_positions_in_sentence(assertion, subj, pred, obj, facets):
+    sentence = assertion.get_source_sentence()
     # tokens = None
 
     obj_start = None
@@ -369,7 +331,7 @@ def get_positions_in_sentence(subj, pred, obj, facets):
                 })
 
     return {
-        "sentence_hash": sentence.__hash__() if sentence is not None else None,
+        "sentence_hash": str(sentence.__hash__()) if sentence is not None else None,
         # "sentence": str(sentence),
         # "tokens": tokens,
         "subj_start": subj_start,
