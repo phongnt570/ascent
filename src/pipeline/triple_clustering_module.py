@@ -84,17 +84,17 @@ def run_triple_clustering_for_subject(subject: Synset, factory: TripleClustering
         with open(input_file) as f:
             data = json.load(f)
 
-    logger.info(f'Subject {subject.name()} - Clustering general triples')
     general_assertion_list = get_assertion_list(data, key=GENERAL_ASSERTION_KEY)
+    logger.info(f'Subject {subject.name()} - Clustering general triples [{len(general_assertion_list)}]')
     general_clusters = bert_based_triple_clustering(general_assertion_list, factory,
                                                     prominent_lemma=data[PROMINENT_LEMMA_KEY])
 
-    logger.info(f'Subject {subject.name()} - Clustering subgroup triples')
     sub_group_assertion_list = get_assertion_list(data, key=SUBGROUP_ASSERTION_KEY)
+    logger.info(f'Subject {subject.name()} - Clustering subgroup triples [{len(sub_group_assertion_list)}]')
     sub_group_clusters = bert_based_triple_clustering(sub_group_assertion_list, factory)
 
-    logger.info(f'Subject {subject.name()} - Clustering subpart triples')
     sub_part_assertion_list = get_assertion_list(data, key=ASPECT_ASSERTION_KEY)
+    logger.info(f'Subject {subject.name()} - Clustering subpart triples [{len(sub_part_assertion_list)}]')
     sub_part_clusters = bert_based_triple_clustering(sub_part_assertion_list, factory)
 
     # update json data
@@ -151,6 +151,9 @@ def read_original_assertions_from_json(subject: Synset) -> dict:
 def bert_based_triple_clustering(assertion_list: List[SimpleAssertion], factory: TripleClusteringFactory,
                                  prominent_lemma: str = None) -> Dict[str, List[List[SimpleAssertion]]]:
     """Main function for BERT-based approach to triple clustering."""
+
+    if not assertion_list:
+        return {}
 
     # group same subjects
     if not prominent_lemma:
