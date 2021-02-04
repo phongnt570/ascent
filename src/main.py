@@ -51,7 +51,8 @@ else:
 subject_list = get_subject_list(input_subject)
 
 logger.info(
-    f"Subjects: [{', '.join(subject for subject in subject_list[:5])}{',...' if len(subject_list) > 5 else ''}]")
+    f"Running pipeline for {len(subject_list)} "
+    f"subjects: [{', '.join(subject for subject in subject_list[:5])}{',...' if len(subject_list) > 5 else ''}]")
 
 # run which modules?
 if args.from_m is None or args.to_m is None:
