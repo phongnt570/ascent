@@ -127,7 +127,7 @@ class TripleClusteringFactory(object):
                     batch,
                     return_tensors="pt",
                     padding="max_length",
-                    truncation=True,
+                    truncation='longest_first',
                     max_length=32
                 )
 
