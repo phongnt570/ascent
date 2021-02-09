@@ -7,7 +7,7 @@ ASCENT is capable of extracting facet-enriched assertions, for
 example, `lawyer; represents; clients; [LOCATION] in courts` or
 `elephant; uses; its trunk; [PURPOSE] to suck up water`.
 A web interface of the ASCENT knowledge base for 10,000 popular
-concepts can be found at https://ascentkb.herokuapp.com/.
+concepts can be found at https://ascent.mpi-inf.mpg.de/.
 
 ## Prerequisites
 ### Setting up environment
