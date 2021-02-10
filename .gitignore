@@ -126,9 +126,14 @@ update_website.sh
 /src/*.log
 /resources/eval/
 /src/*.txt
-/src/experiment/
+#/src/experiment/
 /src/extraction/moby*.py
 #/src/facet_labeling/facet_data_loader.py
 #/src/facet_labeling/run_facet_classifier.py
 #/src/triple_clustering/run_triple_pair_classifier.py
 #/src/triple_clustering/triple_pair_data_loader.py
+/src/experiment/filter_conceptnet.py
+/src/experiment/relevant_assess.py
+/src/experiment/rule_based_clustering.py
+/src/experiment/threshold_analysis.py
+/src/experiment/openie/

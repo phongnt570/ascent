@@ -81,9 +81,9 @@ class Assertion(object):
     def get_source_sentence(self):
         return self.source_sentence
 
-    def to_dict(self, simplify: bool = False) -> Dict[str, Any]:
+    def to_dict(self, simplify: bool = False, include_source: bool = False) -> Dict[str, Any]:
         if not simplify:
-            return {
+            p = {
                 "subject": str(self.full_subj) if self.full_subj is not None else None,
                 "predicate": self.full_pred.strip('$') if isinstance(self.full_pred, str) else ' '.join(
                     [str(token) for token in self.full_pred]),
@@ -98,7 +98,11 @@ class Assertion(object):
             p.update({
                 "subject": str(self.full_subj)
             })
-            return p
+
+        if not include_source:
+            p.pop("source")
+
+        return p
 
     def fix_in_order_to(self) -> None:
         to_be_removed = set()

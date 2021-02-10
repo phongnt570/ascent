@@ -27,8 +27,19 @@ class FacetLabelingFactory(object):
                 logger.warning(f"Facets and sources do not match: "
                                f"{assertion['subject']} ; {assertion['predicate']} ; {assertion['object']}. "
                                f"Created fake positions (Nones).")
-                assertion["source"]["facets_matches"] = [{"matches": {"start": None, "end": None, "start_char": None,
-                                                                      "end_char": None}}] * len(assertion["facets"])
+                # create fake positions
+                assertion["source"]["facets_matches"] = [
+                                                            {
+                                                                "matches":
+                                                                    {
+                                                                        "start": None,
+                                                                        "end": None,
+                                                                        "start_char": None,
+                                                                        "end_char": None
+                                                                    }
+                                                            }
+                                                        ] * len(assertion["facets"])
+
             for facet, source in zip(assertion["facets"], assertion["source"]["facets_matches"]):
                 facet_list.append(facet)
                 source_list.append(source)
@@ -73,9 +84,9 @@ def prepare(assertion: Dict[str, Union[str, Dict[str, str]]], facet: Dict[str, s
     return " ".join([
         assertion["subject"],
         "[pred]",
-        assertion["predicate"],
+        assertion["predicate"] or "",
         "[obj]",
-        assertion["object"],
+        assertion["object"] or "",
         "[facet]",
         get_facet_text(facet)
     ])
