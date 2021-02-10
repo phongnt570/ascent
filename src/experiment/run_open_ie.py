@@ -53,11 +53,13 @@ def extract_file(input_path, output_path):
 
     assertions_per_line = []
     for line in lines:
-        assertions_per_line.append(run_stuffie(line, nlp, do_eval=True))
+        # assertions_per_line.append(run_stuffie(line, nlp, do_eval=True))
+        assertions_per_line.append([a for a in run_stuffie(line, nlp, do_eval=False) if a.full_obj is not None])
 
-    results_per_line = [[a.to_dict(include_source=True) for a in apl] for apl in assertions_per_line]
+    results_per_line = [[a.to_dict(simplify=True, include_source=True) for a in apl] for apl in assertions_per_line]
     all_assertions = [a for apl in results_per_line for a in apl]
     labeler.label(all_assertions)
+
     for assertion in all_assertions:
         assertion.pop("source")
 
@@ -83,9 +85,10 @@ def cli():
         if input_text == 'q':
             return
 
-        assertions = run_stuffie(input_text, nlp, do_eval=True)
+        # assertions = run_stuffie(input_text, nlp, do_eval=True)
+        assertions = [a for a in run_stuffie(input_text, nlp, do_eval=False) if a.full_obj is not None]
 
-        results = [assertion.to_dict(include_source=True) for assertion in assertions]
+        results = [assertion.to_dict(simplify=True, include_source=True) for assertion in assertions]
         labeler.label(results)
 
         for assertion in results:
