@@ -95,9 +95,9 @@ class Assertion(object):
             }
         else:
             p = SimplifiedAssertion(self).to_dict(simplifies_object=True)
-            # p.update({
-            #     "subject": str(self.full_subj)
-            # })
+            p.update({
+                "subject": str(self.full_subj)
+            })
 
         if not include_source:
             p.pop("source")
