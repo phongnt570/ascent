@@ -37,7 +37,7 @@ python -c 'import nltk; nltk.download("wordnet")'
 
 ### RoBERTa models
 Download our pretrained models for triple clustering and
-facet type labeling from this link: https://www.dropbox.com/s/go8ky3qqshjqo5x/models.zip?dl=0
+facet type labeling from https://nextcloud.mpi-klsb.mpg.de/index.php/s/s2ELgPgC5LEGEFp
 then extract it to the project's root folder.
 
 ### Bing API Key
