@@ -99,8 +99,8 @@ You can find references of the config fields in the following:
     of the machine.
 
 - __[bing_search]__
-  - `subscription_key`: __Bing API subscription key__ <span style="color:red">(required)</span>
-  - `custom_config`: __Bing API custom config__ <span style="color:red">(required)</span>
+  - `subscription_key`: __Bing API subscription key__ <span style="color:red">*(required)*</span>
+  - `custom_config`: __Bing API custom config__ <span style="color:red">*(required)*</span>
   - `num_urls`: number of URLs to be fetched by the Bing API
   - `host` = *api.cognitive.microsoft.com*
   - `path` = */bingcustomsearch/v7.0/search*
@@ -135,7 +135,7 @@ You can find references of the config fields in the following:
 
 - __[facet_labeling]__
   - `model`: path to the facet labeling model
-  - `batch_size` = 1024
+  - `batch_size`: size of faceted triple batch to be processed at a time (default: 1024)
   - `overwrite`: (true|false) indicates that when result of this module are already
     found in the output folder, overwrite it or not
 
