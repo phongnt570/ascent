@@ -104,42 +104,42 @@ You can find references of the config fields in the following:
   - `num_urls`: number of URLs to be fetched by the Bing API
   - `host` = *api.cognitive.microsoft.com*
   - `path` = */bingcustomsearch/v7.0/search*
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
   - `num_processes`: number of processors for this module
 
 - __[article_grab]__
   - `num_crawlers`: number of parallel crawlers, each crawler works with one subject at a time
   - `processes_per_crawler`: number of processors per crawlers
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
 
 - __[filter]__
   - `num_processes`: number of processors for this module
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
 
 - __[extraction]__
   - `doc_threshold`: document cosine-similarity threshold. Documents lower than this threshold
     will be filtered out (default: 0.55)
   - `num_processes`: number of processors for this module
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
 
 - __[triple_clustering]__
   - `model`: path to the triple clustering model
   - `threshold`: threshold for the HAC algorithm (default: 0.005)
   - `batch_size`: size of triple pair batch to be processed at a time (default: 1024)
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
 
 - __[facet_labeling]__
   - `model`: path to the facet labeling model
   - `batch_size`: size of faceted triple batch to be processed at a time (default: 1024)
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
 
 - __[facet_grouping]__
   - `num_processes`: number of processors for this module
-  - `overwrite`: (true|false) indicates that when result of this module are already
+  - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
