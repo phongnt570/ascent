@@ -43,7 +43,8 @@ then extract it to the project's root folder.
 ### Bing API Key
 Edit the file `config.ini` and provide your __Bing API Key__ and
 __Bing Search Custom Config__ under the section `[bing_search]`.
-
+Documentations to the Bing Custom Search API:
+https://docs.microsoft.com/en-us/rest/api/cognitiveservices-bingsearch/bing-custom-search-api-v7-reference
 ## Usage
 To run the ASCENT pipeline, navigate to the `src/` folder and execute
 the `main.py` script:
