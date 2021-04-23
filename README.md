@@ -84,13 +84,62 @@ From module: 0
 
 Final results will be written to
 `output/kb/<subject>/final.json`.
+Intermediate results of every module can be found in the `output` folder as well. 
 
-## Advanced configurations
-An example config file is `config.ini`. The missing fields are Bing
-API-related.
+## Configurations
+An example config file is the `config.ini` file.
+The missing fields are the Bing API-related ones.
+You can find references of the config fields in the following:
 
 - __[default]__
-    - `res_dir`: resource folder
-    - `output`: output folder
-    - `gpu`: list of comma-separated GPUs to be used. `-1` means CPU will
-    be used.
+  - `res_dir`: resource folder
+  - `output`: output folder
+  - `gpu`: list of comma-separated GPUs to be used. `-1` means CPU will
+    be used. E.g., `gpu = 0,3` means that we'll use the 0-th and 3-rd GPUs
+    of the machine.
+
+- __[bing_search]__
+  - `subscription_key`: __Bing API subscription key__ <span style="color:red">(required)</span>
+  - `custom_config`: __Bing API custom config__ <span style="color:red">(required)</span>
+  - `num_urls`: number of URLs to be fetched by the Bing API
+  - `host` = *api.cognitive.microsoft.com*
+  - `path` = */bingcustomsearch/v7.0/search*
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+  - `num_processes`: number of processors for this module
+
+- __[article_grab]__
+  - `num_crawlers`: number of parallel crawlers, each crawler works with one subject at a time
+  - `processes_per_crawler`: number of processors per crawlers
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+
+- __[filter]__
+  - `num_processes`: number of processors for this module
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+
+- __[extraction]__
+  - `doc_threshold`: document cosine-similarity threshold. Documents lower than this threshold
+    will be filtered out (default: 0.55)
+  - `num_processes`: number of processors for this module
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+
+- __[triple_clustering]__
+  - `model`: path to the triple clustering model
+  - `threshold`: threshold for the HAC algorithm (default: 0.005)
+  - `batch_size`: size of triple pair batch to be processed at a time (default: 1024)
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+
+- __[facet_labeling]__
+  - `model`: path to the facet labeling model
+  - `batch_size` = 1024
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
+
+- __[facet_grouping]__
+  - `num_processes`: number of processors for this module
+  - `overwrite`: (true|false) indicates that when result of this module are already
+    found in the output folder, overwrite it or not
