@@ -1,4 +1,7 @@
-# ASCENT: Advanced Semantics for Commonsense Knowledge Extraction
+# _Ascent_: Advanced Semantics for Commonsense Knowledge Extraction
+
+- **Website**: https://ascent.mpi-inf.mpg.de
+- **Download 8.9M commonsense assertions**: https://ascent.mpi-inf.mpg.de/download
 
 ## Introduction
 ASCENT is a pipeline for extracting and consolidating commonsense
