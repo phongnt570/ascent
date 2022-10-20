@@ -147,3 +147,25 @@ You can find references of the config fields in the following:
   - `num_processes`: number of processors for this module
   - `overwrite`: (true|false) indicates that when result of this module is already
     found in the output folder, overwrite it or not
+
+
+## Citation
+
+If you use Ascent, please cite the following paper:
+
+```bibtex
+@inproceedings{ascent,
+  author = {Nguyen, Tuan-Phong and Razniewski, Simon and Weikum, Gerhard},
+  title = {Advanced Semantics for Commonsense Knowledge Extraction},
+  year = {2021},
+  isbn = {9781450383127},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3442381.3449827},
+  doi = {10.1145/3442381.3449827},
+  booktitle = {Proceedings of the Web Conference 2021},
+  pages = {2636–2647},
+  numpages = {12},
+  location = {Ljubljana, Slovenia},
+  series = {WWW '21}
+}```
